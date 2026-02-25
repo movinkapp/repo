@@ -1,17 +1,12 @@
 <script>
   import { supabase } from '$lib/supabase.js'
-  import { onMount } from 'svelte'
+  import { goto } from '$app/navigation'
 
-  let status = 'testing...'
-
-  onMount(async () => {
-    const { error } = await supabase.auth.getSession()
-    if (error) {
-      status = 'Error: ' + error.message
-    } else {
-      status = 'Supabase connected!'
-    }
-  })
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    goto('/login')
+  }
 </script>
 
-<p>{status}</p>
+<h1>Home</h1>
+<button onclick={handleLogout}>Logout</button>
