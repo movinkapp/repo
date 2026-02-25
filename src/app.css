@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #111111;
+  --surface: #1c1c1c;
+  --surface-2: #272727;
+  --border: #333333;
+
+  --text: #f0f0f0;
+  --text-2: #999999;
+  --text-3: #555555;
+
+  --accent: #ffffff;
+
+  --upcoming: #4ade80;
+  --active: #f59e0b;
+  --completed: #6b7280;
+  --error: #ef4444;
+
+  --font-display: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Geist', sans-serif;
+
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  outline: none;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+}
