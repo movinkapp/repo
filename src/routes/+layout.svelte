@@ -10,6 +10,15 @@
       goto('/login')
     }
   })
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    goto('/login')
+  }
 </script>
 
 <slot />
+
+<footer>
+  <button onclick={handleLogout}>Logout</button>
+</footer>

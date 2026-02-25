@@ -5,6 +5,16 @@
   let spots = []
   let loading = true
 
+  function getStatus(spot) {
+    const today = new Date()
+    const start = new Date(spot.start_date)
+    const end = new Date(spot.end_date)
+    
+    if (today < start) return 'upcoming'
+    if (today > end) return 'completed'
+    return 'active'
+  }
+
   onMount(async () => {
     const { data, error } = await supabase
       .from('spots')
@@ -31,6 +41,7 @@
         <p>{spot.city}, {spot.country}</p>
         <p>{spot.start_date} → {spot.end_date}</p>
         <p>{spot.deal_type === 'flat_daily' ? spot.deal_value + ' ' + spot.currency + '/day' : spot.deal_value + '% commission'}</p>
+        <p>{getStatus(spot)}</p>
       </div>
     </a>
   {/each}
