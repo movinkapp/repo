@@ -25,11 +25,13 @@
   <p>No spots yet.</p>
 {:else}
   {#each spots as spot}
-    <div>
-      <h2>{spot.studio_name}</h2>
-      <p>{spot.city}, {spot.country}</p>
-      <p>{spot.start_date} → {spot.end_date}</p>
-      <p>{spot.deal_type === 'flat_daily' ? spot.deal_value + ' ' + spot.currency + '/day' : spot.deal_value + '% commission'}</p>
-    </div>
+    <a href="/spots/{spot.id}">
+      <div>
+        <h2>{spot.studio_name}</h2>
+        <p>{spot.city}, {spot.country}</p>
+        <p>{spot.start_date} → {spot.end_date}</p>
+        <p>{spot.deal_type === 'flat_daily' ? spot.deal_value + ' ' + spot.currency + '/day' : spot.deal_value + '% commission'}</p>
+      </div>
+    </a>
   {/each}
 {/if}
