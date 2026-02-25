@@ -1,6 +1,7 @@
 <script>
   import { supabase } from '$lib/supabase.js'
   import { goto } from '$app/navigation'
+  import { ChevronLeft } from 'lucide-svelte'
 
   let studio_name = ''
   let city = ''
@@ -55,34 +56,192 @@
   }
 </script>
 
-<h1>New Spot</h1>
+<div class="page">
+  <div class="header">
+    <a href="/spots" class="back">
+      <ChevronLeft size={20} strokeWidth={1.5} />
+    </a>
+    <h1>New Spot</h1>
+  </div>
 
-<input bind:value={studio_name} placeholder="Studio name" />
-<input bind:value={city} placeholder="City" />
-<input bind:value={country} placeholder="Country" />
-<input bind:value={start_date} type="date" />
-<input bind:value={end_date} type="date" />
+  <div class="form">
+    <div class="field">
+      <label for="studio_name">Studio</label>
+      <input id="studio_name" bind:value={studio_name} type="text" placeholder="Studio name" />
+    </div>
 
-<select bind:value={deal_type}>
-  <option value="flat_daily">Flat daily rate</option>
-  <option value="percentage">Studio commission %</option>
-</select>
+    <div class="row">
+      <div class="field">
+        <label for="city">City</label>
+        <input id="city" bind:value={city} type="text" placeholder="City" />
+      </div>
+      <div class="field">
+        <label for="country">Country</label>
+        <input id="country" bind:value={country} type="text" placeholder="Country" />
+      </div>
+    </div>
 
-<input bind:value={deal_value} type="number" 
-  placeholder={deal_type === 'flat_daily' ? 'Daily rate' : 'Commission %'} />
+    <div class="row">
+      <div class="field">
+        <label for="start_date">From</label>
+        <input id="start_date" bind:value={start_date} type="date" />
+      </div>
+      <div class="field">
+        <label for="end_date">To</label>
+        <input id="end_date" bind:value={end_date} type="date" />
+      </div>
+    </div>
 
-<select bind:value={currency}>
-  {#each currencies as c}
-    <option value={c}>{c}</option>
-  {/each}
-</select>
+    <div class="field">
+      <label for="deal_type">Deal type</label>
+      <select id="deal_type" bind:value={deal_type}>
+        <option value="flat_daily">Flat daily rate</option>
+        <option value="percentage">Studio commission %</option>
+      </select>
+    </div>
 
-<textarea bind:value={notes} placeholder="Notes (optional)"></textarea>
+    <div class="row">
+      <div class="field">
+        <label for="deal_value">
+          {deal_type === 'flat_daily' ? 'Daily rate' : 'Commission %'}
+        </label>
+        <input id="deal_value" bind:value={deal_value} type="number"
+          placeholder={deal_type === 'flat_daily' ? '200' : '30'} />
+      </div>
+      <div class="field">
+        <label for="currency">Currency</label>
+        <select id="currency" bind:value={currency}>
+          {#each currencies as c}
+            <option value={c}>{c}</option>
+          {/each}
+        </select>
+      </div>
+    </div>
 
-<button onclick={handleSubmit} disabled={loading}>
-  {loading ? 'Saving...' : 'Create spot'}
-</button>
+    <div class="field">
+      <label for="notes">Notes</label>
+      <textarea id="notes" bind:value={notes} placeholder="Anything worth remembering..." rows="3"></textarea>
+    </div>
 
-{#if error}
-  <p>{error}</p>
-{/if}
+    {#if error}
+      <p class="error">{error}</p>
+    {/if}
+
+    <button class="btn-primary" onclick={handleSubmit} disabled={loading}>
+      {loading ? '···' : 'Create spot'}
+    </button>
+  </div>
+</div>
+
+<style>
+  .page {
+    padding: 56px 24px 100px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .back {
+    color: var(--text-2);
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+  }
+
+  .back:active {
+    color: var(--text);
+  }
+
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  input, select, textarea {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    padding: 12px 14px;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--text-2);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--text-3);
+  }
+
+  textarea {
+    resize: none;
+    line-height: 1.5;
+  }
+
+  .btn-primary {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 15px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s;
+    letter-spacing: -0.3px;
+    width: 100%;
+  }
+
+  .btn-primary:active {
+    opacity: 0.8;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .error {
+    color: var(--error);
+    font-size: 13px;
+  }
+</style>

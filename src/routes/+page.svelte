@@ -1,6 +1,5 @@
 <script>
   import { supabase } from '$lib/supabase.js'
-  import { goto } from '$app/navigation'
   import { onMount } from 'svelte'
 
   let userName = ''
@@ -66,38 +65,38 @@
 
     <!-- SPOT ATIVO -->
     {#if activeSpot}
-      <div class="card card-active" onclick={() => goto(`/spots/${activeSpot.id}`)}>
+      <a href={`/spots/${activeSpot.id}`} class="card card-active">
         <span class="badge badge-active">On the road</span>
         <h2>{activeSpot.studio_name}</h2>
         <p class="card-sub">{activeSpot.city}, {activeSpot.country}</p>
         <p class="card-detail">{daysLeft(activeSpot.end_date)} days left</p>
-      </div>
+      </a>
 
     <!-- PROXIMO SPOT -->
     {:else if upcomingSpot}
-      <div class="card card-upcoming" onclick={() => goto(`/spots/${upcomingSpot.id}`)}>
+      <a href={`/spots/${upcomingSpot.id}`} class="card card-upcoming">
         <span class="badge badge-upcoming">Coming up</span>
         <h2>{upcomingSpot.studio_name}</h2>
         <p class="card-sub">{upcomingSpot.city}, {upcomingSpot.country}</p>
         <p class="card-detail">In {daysUntil(upcomingSpot.start_date)} days</p>
-      </div>
+      </a>
 
     <!-- SEM SPOTS -->
     {:else}
-      <div class="card card-empty" onclick={() => goto('/spots/new')}>
+      <a href="/spots/new" class="card card-empty">
         <p class="empty-title">Your story starts here.</p>
         <p class="empty-sub">Plan your next move →</p>
-      </div>
+      </a>
     {/if}
 
     <!-- ULTIMO SPOT -->
     {#if lastSpot}
       <div class="section">
         <p class="section-label">Last stop</p>
-        <div class="card card-last" onclick={() => goto(`/spots/${lastSpot.id}`)}>
+        <a href={`/spots/${lastSpot.id}`} class="card card-last">
           <p class="last-name">{lastSpot.studio_name}</p>
           <p class="card-sub">{lastSpot.city} · {lastSpot.start_date.slice(0, 7)}</p>
-        </div>
+        </a>
       </div>
     {/if}
 
@@ -120,10 +119,10 @@
 
     <!-- CALCULATOR CTA -->
     <div class="section">
-      <div class="card card-cta" onclick={() => goto('/calculator')}>
+      <a href="/calculator" class="card card-cta">
         <p class="cta-text">Run the numbers →</p>
         <p class="card-sub">Check if your next trip is worth it</p>
-      </div>
+      </a>
     </div>
 
   {/if}
@@ -212,7 +211,11 @@
     background: var(--surface-2);
     color: var(--text-2);
   }
-
+  a.card {
+  display: block;
+  color: var(--text);
+  text-decoration: none;
+}
   .card-empty {
     border-style: dashed;
     text-align: center;
