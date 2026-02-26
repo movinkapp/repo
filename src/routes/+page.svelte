@@ -85,7 +85,7 @@
     {:else}
       <a href="/spots/new" class="card card-empty">
         <p class="empty-title">Your story starts here.</p>
-        <p class="empty-sub">Plan your next move →</p>
+        <p class="empty-sub">Add your first spot →</p>
       </a>
     {/if}
 
@@ -121,7 +121,7 @@
     <div class="section">
       <a href="/calculator" class="card card-cta">
         <p class="cta-text">Run the numbers →</p>
-        <p class="card-sub">Check if your next trip is worth it</p>
+        <p class="card-sub">Before you say yes.</p>
       </a>
     </div>
 

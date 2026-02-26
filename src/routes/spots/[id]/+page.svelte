@@ -53,6 +53,11 @@
     return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
   }
 
+  function capitalize(str) {
+    if (!str) return ''
+    return str.charAt(0).toUpperCase() + str.slice(1)
+  }
+
   async function addSession() {
     const { error } = await supabase.from('sessions').insert({
       spot_id: $page.params.id,
@@ -167,7 +172,7 @@
             <input id="s-date" bind:value={date} type="date" />
           </div>
           <div class="field">
-            <label for="s-value">Tattoo value ({spot.currency})</label>
+            <label for="s-value">Session total ({spot.currency})</label>
             <input id="s-value" bind:value={value} type="number" placeholder="0" />
           </div>
         </div>
@@ -198,7 +203,7 @@
           </div>
         </div>
 
-        <p class="hint">Did the client pay anything upfront?</p>
+        <p class="hint">Deposit received?</p>
         <div class="deposit-row">
           <div class="deposit-controls">
             <div class="toggle compact" style="max-width:260px;">
@@ -216,7 +221,7 @@
     {/if}
 
     {#if sessions.length === 0 && !showSessionForm}
-      <p class="empty-text">No sessions yet. Tap Add to record your first.</p>
+      <p class="empty-text">No sessions recorded yet.</p>
     {:else}
       {#each sessions as session}
         <div class="session-card">
@@ -255,7 +260,7 @@
             <button type="button" class:active={cost_type === 'food'} onclick={() => cost_type = 'food'}>Food</button>
             <button type="button" class:active={cost_type === 'other'} onclick={() => cost_type = 'other'}>Other</button>
           </div>
-          <p class="hint">Choose a category first, then enter the amount.</p>
+          <p class="hint">Select a category, then add the amount.</p>
         </div>
 
         <div class="form-row">
@@ -279,11 +284,11 @@
     {/if}
 
     {#if costs.length === 0 && !showCostForm}
-      <p class="empty-text">No costs yet. Add flights, accommodation, food and more.</p>
+      <p class="empty-text">No costs logged yet.</p>
     {:else}
       {#each costs as cost}
         <div class="cost-card">
-          <p class="cost-type">{cost.type}</p>
+          <p class="cost-type">{capitalize(cost.type)}</p>
           <p class="cost-amount">-{cost.amount} {spot.currency}</p>
         </div>
       {/each}

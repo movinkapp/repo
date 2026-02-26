@@ -41,7 +41,7 @@
       </p>
     {:else}
       <p class="tagline" transition:fade={{ duration: 150 }}>
-        Join thousands of artists on the road.
+        Your journey starts here.
       </p>
     {/if}
   </div>
@@ -50,7 +50,7 @@
       <div class="field name-field" class:hidden={mode === 'login'}>
         <label for="name">Artist name</label>
         <input id="name" bind:value={name} type="text"
-          placeholder="How should we call you?"
+          placeholder="Artist name"
           tabindex={mode === 'login' ? -1 : 0} />
       </div>
 
@@ -73,7 +73,7 @@
     </button>
 
     <button class="btn-ghost" onclick={() => { mode = mode === 'login' ? 'register' : 'login'; error = '' }}>
-      {mode === 'login' ? 'New here? Create account' : 'Already in? Sign in'}
+      {mode === 'login' ? 'First time? Join Movink' : 'Already have an account? Sign in'}
     </button>
   </div>
 </div>

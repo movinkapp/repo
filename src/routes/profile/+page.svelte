@@ -58,15 +58,15 @@
       <div class="stats-grid">
         <div class="stat-card">
           <p class="stat-value">{stats.spots}</p>
-          <p class="stat-label">spots</p>
+          <p class="stat-label">SPOTS</p>
         </div>
         <div class="stat-card">
           <p class="stat-value">{stats.countries}</p>
-          <p class="stat-label">countries</p>
+          <p class="stat-label">COUNTRIES</p>
         </div>
         <div class="stat-card wide">
           <p class="stat-value">{stats.sessions}</p>
-          <p class="stat-label">sessions</p>
+          <p class="stat-label">SESSIONS</p>
         </div>
       </div>
     </div>

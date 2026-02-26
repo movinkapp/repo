@@ -31,7 +31,7 @@
 
   <!-- DEAL -->
   <div class="section">
-    <p class="section-label">Deal</p>
+    <p class="section-label">Your deal</p>
     <div class="card">
       <div class="field">
         <p class="field-label">Deal type</p>
@@ -43,14 +43,14 @@
 
       <div class="two-col">
         <div class="field">
-          <p class="field-label">{deal_type === 'percentage' ? 'Studio takes' : 'Flat rate'}</p>
+          <p class="field-label">{deal_type === 'percentage' ? 'Studio commission' : 'Daily rate'}</p>
           <div class="input-wrap">
             <input type="number" bind:value={deal_value} placeholder="0" inputmode="numeric" />
             <span class="unit">{deal_type === 'percentage' ? '%' : '€'}</span>
           </div>
         </div>
         <div class="field">
-          <p class="field-label">Avg session value</p>
+          <p class="field-label">Avg tattoo price</p>
           <div class="input-wrap">
             <input type="number" bind:value={avg_session} placeholder="0" inputmode="numeric" />
             <span class="unit">€</span>
@@ -81,7 +81,7 @@
         </div>
       </div>
       <div class="field">
-        <p class="field-label">Other costs</p>
+        <p class="field-label">Other</p>
         <div class="input-wrap">
           <input type="number" bind:value={other} placeholder="0" inputmode="numeric" />
           <span class="unit">€</span>
@@ -95,7 +95,7 @@
     <div class="result-card">
       <div class="result-row">
         <div class="result-item">
-          <p class="result-label">You keep per session</p>
+          <p class="result-label">You keep per tattoo</p>
           <p class="result-big">{artistKeeps.toFixed(0)}<span class="result-unit">€</span></p>
         </div>
         {#if totalCosts > 0}
@@ -122,7 +122,7 @@
         {#each projections as p}
           <div class="proj-row {p.viable ? 'viable' : 'loss'}">
             <span class="proj-dot"></span>
-            <p class="proj-label">{p.sessions} {p.sessions === 1 ? 'session' : 'sessions'}</p>
+            <p class="proj-label">{p.sessions} {p.sessions === 1 ? 'tattoo' : 'tattoos'}</p>
             <p class="proj-net">{p.net >= 0 ? '+' : ''}{p.net.toFixed(0)}€</p>
           </div>
         {/each}

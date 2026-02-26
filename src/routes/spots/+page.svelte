@@ -15,6 +15,11 @@
     return 'active'
   }
 
+  function getStatusLabel(status) {
+    if (status === 'completed') return 'Done'
+    return status
+  }
+
   function formatDate(date) {
     return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
   }
@@ -44,7 +49,7 @@
   {:else if spots.length === 0}
     <div class="empty">
       <p class="empty-title">No spots yet.</p>
-      <p class="empty-sub">Add your first guest spot to get started.</p>
+      <p class="empty-sub">Your next guest spot starts here.</p>
     </div>
   {:else}
     <div class="list">
@@ -59,7 +64,7 @@
               </p>
             </div>
             <span class="badge badge-{getStatus(spot)}">
-              {getStatus(spot)}
+              {getStatusLabel(getStatus(spot))}
             </span>
           </div>
           <div class="card-bottom">
