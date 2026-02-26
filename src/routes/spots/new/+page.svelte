@@ -93,11 +93,22 @@
     </div>
 
     <div class="field">
-      <label for="deal_type">Deal type</label>
-      <select id="deal_type" bind:value={deal_type}>
-        <option value="flat_daily">Flat daily rate</option>
-        <option value="percentage">Studio commission %</option>
-      </select>
+      <label for="deal_flat">Deal type</label>
+      <div class="toggle">
+        <button 
+          id="deal_flat"
+          type="button"
+          class:active={deal_type === 'flat_daily'}
+          onclick={() => deal_type = 'flat_daily'}>
+          Flat daily
+        </button>
+        <button 
+          type="button"
+          class:active={deal_type === 'percentage'}
+          onclick={() => deal_type = 'percentage'}>
+          Commission %
+        </button>
+      </div>
     </div>
 
     <div class="row">
@@ -244,4 +255,32 @@
     color: var(--error);
     font-size: 13px;
   }
+
+  .toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .toggle button {
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-2);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .toggle button.active {
+  background: var(--text);
+  color: var(--bg);
+}
 </style>
