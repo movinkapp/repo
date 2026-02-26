@@ -131,13 +131,13 @@
   </div>
 
   <div class="summary">
-    <div class="summary-top">
+      <div class="summary-top">
       <div class="summary-item">
-        <p class="summary-label">Gross</p>
+        <p class="summary-label">GROSS EARNINGS</p>
         <p class="summary-value-sm">{totalArtist.toFixed(0)} <span class="currency">{spot.currency}</span></p>
       </div>
       <div class="summary-item">
-        <p class="summary-label">Costs</p>
+        <p class="summary-label">TRIP COSTS</p>
         <p class="summary-value-sm">{totalCosts.toFixed(0)} <span class="currency">{spot.currency}</span></p>
       </div>
     </div>
@@ -167,13 +167,13 @@
             <input id="s-date" bind:value={date} type="date" />
           </div>
           <div class="field">
-            <label for="s-value">Value ({spot.currency})</label>
+            <label for="s-value">Tattoo value ({spot.currency})</label>
             <input id="s-value" bind:value={value} type="number" placeholder="0" />
           </div>
         </div>
 
         <div class="field">
-          <p class="field-label">Type</p>
+          <p class="field-label">Session type</p>
           <div class="toggle">
             <button type="button" class:active={session_type === 'full_day'} onclick={() => session_type = 'full_day'}>Full day</button>
             <button type="button" class:active={session_type === 'half_day'} onclick={() => session_type = 'half_day'}>Half day</button>
@@ -181,7 +181,7 @@
         </div>
 
         <div class="field">
-          <p class="field-label">Status</p>
+          <p class="field-label">Booking status</p>
           <div class="toggle three">
             <button type="button" class:active={status === 'confirmed'} onclick={() => status = 'confirmed'}>Confirmed</button>
             <button type="button" class:active={status === 'walk_in'} onclick={() => status = 'walk_in'}>Walk-in</button>
@@ -190,7 +190,7 @@
         </div>
 
         <div class="field">
-          <p class="field-label">Payment</p>
+          <p class="field-label">Payment method</p>
           <div class="toggle three">
             <button type="button" class:active={payment_method === 'cash'} onclick={() => payment_method = 'cash'}>Cash</button>
             <button type="button" class:active={payment_method === 'transfer'} onclick={() => payment_method = 'transfer'}>Transfer</button>
@@ -198,13 +198,16 @@
           </div>
         </div>
 
+        <p class="hint">Did the client pay anything upfront?</p>
         <div class="deposit-row">
-          <div class="toggle" style="max-width: 180px; flex-shrink: 0;">
-            <button type="button" class:active={!deposit_received} onclick={() => deposit_received = false}>No deposit</button>
-            <button type="button" class:active={deposit_received} onclick={() => deposit_received = true}>Received</button>
+          <div class="deposit-controls">
+            <div class="toggle compact" style="max-width:260px;">
+              <button type="button" class:active={!deposit_received} onclick={() => deposit_received = false} aria-pressed={!deposit_received}>No deposit</button>
+              <button type="button" class:active={deposit_received} onclick={() => deposit_received = true} aria-pressed={deposit_received}>Deposit received</button>
+            </div>
           </div>
           {#if deposit_received}
-            <input bind:value={deposit_value} type="number" placeholder="Amount" class="deposit-input" />
+            <input bind:value={deposit_value} type="number" placeholder="Amount" class="deposit-input" aria-label="Deposit amount" />
           {/if}
         </div>
 
@@ -213,7 +216,7 @@
     {/if}
 
     {#if sessions.length === 0 && !showSessionForm}
-      <p class="empty-text">No sessions yet.</p>
+      <p class="empty-text">No sessions yet. Tap Add to record your first.</p>
     {:else}
       {#each sessions as session}
         <div class="session-card">
@@ -245,13 +248,14 @@
     {#if showCostForm}
       <div class="form-card">
         <div class="field">
-          <p class="field-label">Type</p>
+          <p class="field-label">Cost category</p>
           <div class="toggle four">
             <button type="button" class:active={cost_type === 'flight'} onclick={() => cost_type = 'flight'}>Flight</button>
             <button type="button" class:active={cost_type === 'accommodation'} onclick={() => cost_type = 'accommodation'}>Stay</button>
             <button type="button" class:active={cost_type === 'food'} onclick={() => cost_type = 'food'}>Food</button>
             <button type="button" class:active={cost_type === 'other'} onclick={() => cost_type = 'other'}>Other</button>
           </div>
+          <p class="hint">Choose a category first, then enter the amount.</p>
         </div>
 
         <div class="form-row">
@@ -260,7 +264,7 @@
             <input id="c-amount" bind:value={cost_amount} type="number" placeholder="0" />
           </div>
           <div class="field">
-            <label for="c-date">Date</label>
+            <label for="c-date">Date <span class="optional">(optional)</span></label>
             <input id="c-date" bind:value={cost_date} type="date" />
           </div>
         </div>
@@ -275,7 +279,7 @@
     {/if}
 
     {#if costs.length === 0 && !showCostForm}
-      <p class="empty-text">No costs yet.</p>
+      <p class="empty-text">No costs yet. Add flights, accommodation, food and more.</p>
     {:else}
       {#each costs as cost}
         <div class="cost-card">
@@ -459,6 +463,20 @@
   .btn-add:active { color: var(--text); border-color: var(--text-3); }
   .empty-text { font-size: 14px; color: var(--text-3); padding: 16px 0; }
 
+  .hint {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: -6px;
+  }
+
+  .optional {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-3);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
   .form-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -540,8 +558,44 @@
 
   .toggle button.active { background: var(--text); color: var(--bg); }
 
-  .deposit-row { display: flex; align-items: center; gap: 12px; }
-  .deposit-input { flex: 1; }
+  .deposit-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .deposit-controls {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* Compact toggle style for deposit */
+  .deposit-row .toggle {
+    gap: 6px;
+    padding: 3px;
+    max-width: 260px;
+  }
+
+  .deposit-row .toggle.compact button {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+
+  .deposit-input {
+    width: 140px;
+    padding: 8px 10px;
+  }
+
+  @media (min-width: 520px) {
+    .deposit-row {
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+    }
+    .deposit-input { width: 160px; }
+  }
 
   .btn-primary {
     background: var(--text);
