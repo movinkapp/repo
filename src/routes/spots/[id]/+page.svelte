@@ -4,6 +4,7 @@
   import { page } from '$app/stores'
   import { ChevronLeft, Plus, MapPin, X } from 'lucide-svelte'
   import { formatDate, formatDeal } from '$lib/utils.js'
+  import { DateInput } from 'date-picker-svelte'
 
   let spot = null
   let sessions = []
@@ -12,7 +13,7 @@
   let showSessionForm = false
   let showCostForm = false
 
-  let date = ''
+  let date = null
   let status = 'confirmed'
   let session_type = 'full_day'
   let value = ''
@@ -23,7 +24,7 @@
 
   let cost_type = 'flight'
   let cost_amount = ''
-  let cost_date = ''
+  let cost_date = null
   let cost_notes = ''
   let sessionError = ''
   let costError = ''
@@ -52,7 +53,6 @@
     return session.value * (1 - spot.deal_value / 100)
   }
 
-
   function capitalize(str) {
     if (!str) return ''
     return str.charAt(0).toUpperCase() + str.slice(1)
@@ -61,7 +61,8 @@
   async function addSession() {
     const { error } = await supabase.from('sessions').insert({
       spot_id: $page.params.id,
-      date, status, session_type,
+      date: date ? date.toISOString().split('T')[0] : null,
+      status, session_type,
       value: value || null,
       deposit_received,
       deposit_value: deposit_value || null,
@@ -80,7 +81,7 @@
       .order('date', { ascending: true })
     sessions = data
     showSessionForm = false
-    date = ''; value = ''; deposit_value = ''; notes = ''
+    date = null; value = ''; deposit_value = ''; notes = ''
     deposit_received = false
   }
 
@@ -89,7 +90,7 @@
       spot_id: $page.params.id,
       type: cost_type,
       amount: cost_amount,
-      date: cost_date || null,
+      date: cost_date ? cost_date.toISOString().split('T')[0] : null,
       notes: cost_notes
     })
 
@@ -105,7 +106,7 @@
       .order('date', { ascending: true })
     costs = data
     showCostForm = false
-    cost_amount = ''; cost_date = ''; cost_notes = ''
+    cost_amount = ''; cost_date = null; cost_notes = ''
   }
 
   $: totalArtist = sessions.reduce((sum, s) => sum + calcArtist(s), 0)
@@ -140,7 +141,7 @@
   </div>
 
   <div class="summary">
-      <div class="summary-top">
+    <div class="summary-top">
       <div class="summary-item">
         <p class="summary-label">GROSS EARNINGS</p>
         <p class="summary-value-sm">{totalArtist.toFixed(0)} <span class="currency">{spot.currency}</span></p>
@@ -170,10 +171,10 @@
 
     {#if showSessionForm}
       <div class="form-card">
-        <div class="form-row">
+        <div class="form-col">
           <div class="field">
             <label for="s-date">Date</label>
-            <input id="s-date" bind:value={date} type="date" />
+            <DateInput id="s-date" bind:value={date} format="dd/MM/yyyy" closeOnSelection={true} placeholder="DD/MM/AAAA" />
           </div>
           <div class="field">
             <label for="s-value">Session total ({spot.currency})</label>
@@ -269,14 +270,14 @@
           <p class="hint">Select a category, then add the amount.</p>
         </div>
 
-        <div class="form-row">
+        <div class="form-col">
           <div class="field">
             <label for="c-amount">Amount ({spot.currency})</label>
             <input id="c-amount" bind:value={cost_amount} type="number" placeholder="0" />
           </div>
           <div class="field">
             <label for="c-date">Date <span class="optional">(optional)</span></label>
-            <input id="c-date" bind:value={cost_date} type="date" />
+            <DateInput id="c-date" bind:value={cost_date} format="dd/MM/yyyy" closeOnSelection={true} placeholder="DD/MM/AAAA" />
           </div>
         </div>
 
@@ -503,9 +504,9 @@
     gap: 14px;
   }
 
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+  .form-col {
+    display: flex;
+    flex-direction: column;
     gap: 12px;
   }
 
@@ -527,8 +528,6 @@
     color: var(--text-3);
   }
 
-
-
   input {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -541,6 +540,7 @@
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
+    box-sizing: border-box;
   }
 
   input:focus { border-color: var(--text-2); outline: none; }
@@ -582,19 +582,14 @@
     align-items: flex-start;
   }
 
-
-  /* Compact toggle style for deposit */
   .deposit-row .toggle {
     max-width: 260px;
   }
-
 
   .deposit-input {
     width: 140px;
     padding: 8px 10px;
   }
-
-  
 
   .btn-primary {
     background: var(--text);
@@ -670,5 +665,78 @@
     font-size: 13px;
     color: var(--error);
     padding: 0 2px;
+  }
+
+  /* date-picker-svelte theme */
+  :global(.date-time-field input) {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--text) !important;
+    font-family: var(--font-body) !important;
+    font-size: 15px !important;
+    padding: 12px 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+  }
+
+  :global(.date-time-field input:focus) {
+    border-color: var(--text-2) !important;
+  }
+
+  :global(.picker) {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
+  }
+
+  :global(.picker .title button),
+  :global(.picker .title span) {
+    color: var(--text) !important;
+    font-family: var(--font-display) !important;
+    font-weight: 700 !important;
+  }
+
+  :global(.picker .day-of-week) {
+    color: var(--text-3) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  :global(.picker .day) {
+    color: var(--text) !important;
+    border-radius: var(--radius-sm) !important;
+    font-family: var(--font-body) !important;
+    font-size: 14px !important;
+  }
+
+  :global(.picker .day:hover) {
+    background: var(--surface-2) !important;
+  }
+
+  :global(.picker .day.selected) {
+    background: var(--text) !important;
+    color: var(--bg) !important;
+  }
+
+  :global(.picker .day.today) {
+    border: 1px solid var(--border) !important;
+  }
+
+  :global(.picker .day.disabled) {
+    color: var(--text-3) !important;
+    opacity: 0.4 !important;
+  }
+
+  :global(.picker button) {
+    color: var(--text-2) !important;
+  }
+
+  :global(.picker button:hover) {
+    color: var(--text) !important;
   }
 </style>
