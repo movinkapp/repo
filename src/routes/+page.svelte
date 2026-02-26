@@ -29,6 +29,10 @@
     return diff
   }
 
+  function formatDate(date) {
+    return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  }
+
   onMount(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'there'

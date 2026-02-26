@@ -19,7 +19,8 @@
       return
     }
 
-    if (pathname === '/login') {
+    if (session && pathname === '/login') {
+      goto('/')
       authChecked = true
       return
     }

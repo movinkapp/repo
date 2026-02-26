@@ -72,21 +72,18 @@
 
     if (error) {
       sessionError = 'Could not save session. Try again.'
-      loading = false
       return
     }
-    sessionError = ''
 
-    if (!error) {
-      const { data } = await supabase
-        .from('sessions').select('*')
-        .eq('spot_id', $page.params.id)
-        .order('date', { ascending: true })
-      sessions = data
-      showSessionForm = false
-      date = ''; value = ''; deposit_value = ''; notes = ''
-      deposit_received = false
-    }
+    sessionError = ''
+    const { data } = await supabase
+      .from('sessions').select('*')
+      .eq('spot_id', $page.params.id)
+      .order('date', { ascending: true })
+    sessions = data
+    showSessionForm = false
+    date = ''; value = ''; deposit_value = ''; notes = ''
+    deposit_received = false
   }
 
   async function addCost() {
@@ -102,17 +99,15 @@
       costError = 'Could not save cost. Try again.'
       return
     }
-    costError = ''
 
-    if (!error) {
-      const { data } = await supabase
-        .from('costs').select('*')
-        .eq('spot_id', $page.params.id)
-        .order('date', { ascending: true })
-      costs = data
-      showCostForm = false
-      cost_amount = ''; cost_date = ''; cost_notes = ''
-    }
+    costError = ''
+    const { data } = await supabase
+      .from('costs').select('*')
+      .eq('spot_id', $page.params.id)
+      .order('date', { ascending: true })
+    costs = data
+    showCostForm = false
+    cost_amount = ''; cost_date = ''; cost_notes = ''
   }
 
   $: totalArtist = sessions.reduce((sum, s) => sum + calcArtist(s), 0)
@@ -220,11 +215,9 @@
 
         <p class="hint">Deposit received?</p>
         <div class="deposit-row">
-          <div class="deposit-controls">
-            <div class="toggle compact" style="max-width:260px;">
-              <button type="button" class:active={!deposit_received} onclick={() => deposit_received = false} aria-pressed={!deposit_received}>No deposit</button>
-              <button type="button" class:active={deposit_received} onclick={() => deposit_received = true} aria-pressed={deposit_received}>Deposit received</button>
-            </div>
+          <div class="toggle" style="max-width:260px;">
+            <button type="button" class:active={!deposit_received} onclick={() => deposit_received = false} aria-pressed={!deposit_received}>No deposit</button>
+            <button type="button" class:active={deposit_received} onclick={() => deposit_received = true} aria-pressed={deposit_received}>Deposit received</button>
           </div>
           {#if deposit_received}
             <input bind:value={deposit_value} type="number" placeholder="Amount" class="deposit-input" aria-label="Deposit amount" />
@@ -593,11 +586,6 @@
     align-items: flex-start;
   }
 
-  .deposit-controls {
-    display: flex;
-    width: 100%;
-    justify-content: flex-start;
-  }
 
   /* Compact toggle style for deposit */
   .deposit-row .toggle {
@@ -606,24 +594,13 @@
     max-width: 260px;
   }
 
-  .deposit-row .toggle.compact button {
-    padding: 6px 8px;
-    font-size: 13px;
-  }
 
   .deposit-input {
     width: 140px;
     padding: 8px 10px;
   }
 
-  @media (min-width: 520px) {
-    .deposit-row {
-      flex-direction: row;
-      align-items: center;
-      gap: 12px;
-    }
-    .deposit-input { width: 160px; }
-  }
+  
 
   .btn-primary {
     background: var(--text);

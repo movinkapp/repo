@@ -47,7 +47,7 @@
 
       <div class="field">
         <p class="field-label">Currency</p>
-        <div class="toggle">
+        <div class="toggle" style="grid-template-columns: 1fr 1fr 1fr;">
           {#each ['EUR', 'GBP', 'USD'] as c}
             <button type="button" class:active={currency === c} onclick={() => currency = c}>{c}</button>
           {/each}
@@ -59,14 +59,14 @@
           <p class="field-label">{deal_type === 'percentage' ? 'Studio commission' : 'Daily rate'}</p>
           <div class="input-wrap">
             <input type="number" bind:value={deal_value} placeholder="0" inputmode="numeric" />
-            <span class="unit">{deal_type === 'percentage' ? '%' : '€'}</span>
+            <span class="unit">{deal_type === 'percentage' ? '%' : symbol}</span>
           </div>
         </div>
         <div class="field">
           <p class="field-label">Avg tattoo price</p>
           <div class="input-wrap">
             <input type="number" bind:value={avg_session} placeholder="0" inputmode="numeric" />
-            <span class="unit">€</span>
+            <span class="unit">{symbol}</span>
           </div>
         </div>
       </div>
@@ -82,14 +82,14 @@
           <p class="field-label">Flight</p>
           <div class="input-wrap">
             <input type="number" bind:value={flight} placeholder="0" inputmode="numeric" />
-            <span class="unit">€</span>
+            <span class="unit">{symbol}</span>
           </div>
         </div>
         <div class="field">
           <p class="field-label">Accommodation</p>
           <div class="input-wrap">
             <input type="number" bind:value={accommodation} placeholder="0" inputmode="numeric" />
-            <span class="unit">€</span>
+            <span class="unit">{symbol}</span>
           </div>
         </div>
       </div>
@@ -97,7 +97,7 @@
         <p class="field-label">Other</p>
         <div class="input-wrap">
           <input type="number" bind:value={other} placeholder="0" inputmode="numeric" />
-          <span class="unit">€</span>
+          <span class="unit">{symbol}</span>
         </div>
       </div>
     </div>
