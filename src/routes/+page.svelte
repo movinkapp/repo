@@ -1,6 +1,7 @@
 <script>
   import { supabase } from '$lib/supabase.js'
   import { onMount } from 'svelte'
+  import { Calculator } from 'lucide-svelte'
 
   let userName = ''
   let spots = []
@@ -67,25 +68,42 @@
     {#if activeSpot}
       <a href={`/spots/${activeSpot.id}`} class="card card-active">
         <span class="badge badge-active">On the road</span>
-        <h2>{activeSpot.studio_name}</h2>
+        <div class="card-main-row">
+          <h2>{activeSpot.studio_name}</h2>
+          <div class="days-row">
+            <span class="days-number days-active">{daysUntil(activeSpot.end_date)}</span>
+            <span class="days-label">days left</span>
+          </div>
+        </div>
         <p class="card-sub">{activeSpot.city}, {activeSpot.country}</p>
-        <p class="card-detail">{daysUntil(activeSpot.end_date)} days left</p>
       </a>
 
     <!-- PROXIMO SPOT -->
     {:else if upcomingSpot}
       <a href={`/spots/${upcomingSpot.id}`} class="card card-upcoming">
         <span class="badge badge-upcoming">Coming up</span>
-        <h2>{upcomingSpot.studio_name}</h2>
+        <div class="card-main-row">
+          <h2>{upcomingSpot.studio_name}</h2>
+          <div class="days-row">
+            <span class="days-number days-upcoming">{daysUntil(upcomingSpot.start_date)}</span>
+            <span class="days-label">days to go</span>
+          </div>
+        </div>
         <p class="card-sub">{upcomingSpot.city}, {upcomingSpot.country}</p>
-        <p class="card-detail">In {daysUntil(upcomingSpot.start_date)} days</p>
       </a>
 
     <!-- SEM SPOTS -->
     {:else}
       <a href="/spots/new" class="card card-empty">
-        <p class="empty-title">Your story starts here.</p>
-        <p class="empty-sub">Add your first spot →</p>
+        <div class="empty-icon">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+            <path d="M8 40 L16 24 L24 32 L32 16 L40 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="40" cy="22" r="3" fill="currentColor"/>
+          </svg>
+        </div>
+        <p class="empty-title">No moves yet.</p>
+        <p class="empty-sub">Where will you go next?</p>
+        <span class="empty-btn">Add your first spot</span>
       </a>
     {/if}
 
@@ -120,8 +138,12 @@
     <!-- CALCULATOR CTA -->
     <div class="section">
       <a href="/calculator" class="card card-cta">
-        <p class="cta-text">Run the numbers →</p>
-        <p class="card-sub">Before you say yes.</p>
+        <div class="cta-header">
+          <Calculator size={16} strokeWidth={1.5} />
+          <p class="cta-label">Calculator</p>
+        </div>
+        <p class="cta-title">Is your next guest spot worth it?</p>
+        <p class="cta-hint">Simulate the deal before you say yes →</p>
       </a>
     </div>
 
@@ -173,6 +195,7 @@
 
   .card-active {
     border-color: var(--active);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
   }
 
   .card h2 {
@@ -185,12 +208,6 @@
   .card-sub {
     font-size: 13px;
     color: var(--text-2);
-  }
-
-  .card-detail {
-    font-size: 13px;
-    color: var(--text-2);
-    margin-top: 8px;
   }
 
   .badge {
@@ -285,13 +302,104 @@
   }
 
   .card-cta {
-    border-style: dashed;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-style: solid;
   }
 
-  .cta-text {
+  .card-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 8px 0 4px;
+  }
+
+  .card-main-row h2 {
+    margin: 0;
+    flex: 1;
+  }
+
+  .days-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .cta-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-3);
+    margin-bottom: 12px;
+  }
+
+  .cta-header .cta-label {
+    margin-bottom: 0;
+  }
+
+  .days-number {
     font-family: var(--font-display);
-    font-size: 16px;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .days-label {
+    font-size: 13px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  .empty-icon {
+    color: var(--text-3);
+    margin-bottom: 16px;
+  }
+
+  .days-active {
+    color: var(--active);
+  }
+
+  .days-upcoming {
+    color: var(--text);
+  }
+
+  .empty-btn {
+    display: inline-block;
+    margin-top: 16px;
+    background: var(--text);
+    color: var(--bg);
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    letter-spacing: -0.3px;
+  }
+
+  .cta-label {
+    font-size: 11px;
     font-weight: 600;
-    margin-bottom: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 12px;
+  }
+
+  .cta-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .cta-hint {
+    font-size: 13px;
+    color: var(--text-3);
   }
 </style>
