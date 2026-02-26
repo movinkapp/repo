@@ -23,7 +23,15 @@
         password,
         options: { data: { name } }
       })
-      if (err) { error = err.message } else { goto('/') }
+      if (err) { 
+        error = err.message 
+      } else { 
+        if (mode === 'register') {
+          goto('/onboarding')
+        } else {
+          goto('/')
+        }
+      }
     }
 
     loading = false
