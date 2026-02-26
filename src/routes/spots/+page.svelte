@@ -16,8 +16,12 @@
   }
 
   function getStatusLabel(status) {
-    if (status === 'completed') return 'Done'
-    return status
+    const labels = {
+      upcoming: 'Upcoming',
+      active: 'Active',
+      completed: 'Done'
+    }
+    return labels[status] || status
   }
 
   function formatDate(date) {

@@ -24,6 +24,8 @@
   let cost_amount = ''
   let cost_date = ''
   let cost_notes = ''
+  let sessionError = ''
+  let costError = ''
 
   onMount(async () => {
     const id = $page.params.id
@@ -68,6 +70,13 @@
       payment_method, notes
     })
 
+    if (error) {
+      sessionError = 'Could not save session. Try again.'
+      loading = false
+      return
+    }
+    sessionError = ''
+
     if (!error) {
       const { data } = await supabase
         .from('sessions').select('*')
@@ -88,6 +97,12 @@
       date: cost_date || null,
       notes: cost_notes
     })
+
+    if (error) {
+      costError = 'Could not save cost. Try again.'
+      return
+    }
+    costError = ''
 
     if (!error) {
       const { data } = await supabase
@@ -216,6 +231,10 @@
           {/if}
         </div>
 
+        {#if sessionError}
+          <p class="form-error">{sessionError}</p>
+        {/if}
+
         <button class="btn-primary" onclick={addSession}>Save session</button>
       </div>
     {/if}
@@ -278,6 +297,10 @@
           <label for="c-notes">Notes</label>
           <input id="c-notes" bind:value={cost_notes} type="text" placeholder="Optional" />
         </div>
+
+        {#if costError}
+          <p class="form-error">{costError}</p>
+        {/if}
 
         <button class="btn-primary" onclick={addCost}>Save cost</button>
       </div>
@@ -670,5 +693,11 @@
     font-size: 15px;
     font-weight: 600;
     color: var(--error);
+  }
+
+  .form-error {
+    font-size: 13px;
+    color: var(--error);
+    padding: 0 2px;
   }
 </style>

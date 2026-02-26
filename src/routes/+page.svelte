@@ -29,13 +29,6 @@
     return diff
   }
 
-  function daysLeft(date) {
-    const today = new Date()
-    const target = new Date(date)
-    const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24))
-    return diff
-  }
-
   onMount(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'there'
@@ -52,7 +45,10 @@
   $: activeSpot = spots.find(s => getStatus(s) === 'active')
   $: upcomingSpot = spots.find(s => getStatus(s) === 'upcoming')
   $: lastSpot = spots.find(s => getStatus(s) === 'completed')
-  $: completedSpots = spots.filter(s => getStatus(s) === 'completed')
+  $: completedSpots = spots.filter(s => {
+    if (getStatus(s) !== 'completed') return false
+    return new Date(s.start_date).getFullYear() === new Date().getFullYear()
+  })
 </script>
 
 <div class="page">
@@ -69,7 +65,7 @@
         <span class="badge badge-active">On the road</span>
         <h2>{activeSpot.studio_name}</h2>
         <p class="card-sub">{activeSpot.city}, {activeSpot.country}</p>
-        <p class="card-detail">{daysLeft(activeSpot.end_date)} days left</p>
+        <p class="card-detail">{daysUntil(activeSpot.end_date)} days left</p>
       </a>
 
     <!-- PROXIMO SPOT -->
@@ -95,7 +91,7 @@
         <p class="section-label">Last stop</p>
         <a href={`/spots/${lastSpot.id}`} class="card card-last">
           <p class="last-name">{lastSpot.studio_name}</p>
-          <p class="card-sub">{lastSpot.city} · {lastSpot.start_date.slice(0, 7)}</p>
+          <p class="card-sub">{lastSpot.city} · {formatDate(lastSpot.start_date)}</p>
         </a>
       </div>
     {/if}

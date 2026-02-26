@@ -6,6 +6,10 @@
   let accommodation = ''
   let other = ''
 
+  let currency = 'EUR'
+  const currencySymbols = { EUR: '€', GBP: '£', USD: '$', BRL: 'R$', AUD: 'A$', JPY: '¥', CHF: 'CHF', CAD: 'CA$' }
+  $: symbol = currencySymbols[currency] || currency
+
   $: dv = Number(deal_value) || 0
   $: av = Number(avg_session) || 0
   $: totalCosts = (Number(flight) || 0) + (Number(accommodation) || 0) + (Number(other) || 0)
@@ -38,6 +42,15 @@
         <div class="toggle">
           <button type="button" class:active={deal_type === 'percentage'} onclick={() => deal_type = 'percentage'}>Commission %</button>
           <button type="button" class:active={deal_type === 'flat_daily'} onclick={() => deal_type = 'flat_daily'}>Flat daily</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <p class="field-label">Currency</p>
+        <div class="toggle">
+          {#each ['EUR', 'GBP', 'USD'] as c}
+            <button type="button" class:active={currency === c} onclick={() => currency = c}>{c}</button>
+          {/each}
         </div>
       </div>
 
@@ -96,13 +109,13 @@
       <div class="result-row">
         <div class="result-item">
           <p class="result-label">You keep per tattoo</p>
-          <p class="result-big">{artistKeeps.toFixed(0)}<span class="result-unit">€</span></p>
+          <p class="result-big">{artistKeeps.toFixed(0)}<span class="result-unit">{symbol}</span></p>
         </div>
         {#if totalCosts > 0}
           <div class="result-divider"></div>
           <div class="result-item">
             <p class="result-label">Total costs</p>
-            <p class="result-mid">{totalCosts}€</p>
+            <p class="result-mid">{totalCosts}{symbol}</p>
           </div>
         {/if}
       </div>
@@ -110,7 +123,7 @@
       {#if breakEven > 0}
         <div class="breakeven">
           <p class="breakeven-label">Break-even</p>
-          <p class="breakeven-value">{breakEven} session{breakEven > 1 ? 's' : ''}</p>
+          <p class="breakeven-value">{breakEven} tattoo{breakEven > 1 ? 's' : ''}</p>
         </div>
       {/if}
     </div>
@@ -123,7 +136,7 @@
           <div class="proj-row {p.viable ? 'viable' : 'loss'}">
             <span class="proj-dot"></span>
             <p class="proj-label">{p.sessions} {p.sessions === 1 ? 'tattoo' : 'tattoos'}</p>
-            <p class="proj-net">{p.net >= 0 ? '+' : ''}{p.net.toFixed(0)}€</p>
+            <p class="proj-net">{p.net >= 0 ? '+' : ''}{p.net.toFixed(0)}{symbol}</p>
           </div>
         {/each}
       </div>

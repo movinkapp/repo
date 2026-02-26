@@ -7,44 +7,73 @@
   import { navigating, page } from '$app/stores'
   import { Home, MapPin, Calculator, User } from 'lucide-svelte'
 
+  let authChecked = false
+
   onMount(async () => {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session && window.location.pathname !== '/login') {
-      goto('/login')
+    const pathname = window.location.pathname
+
+    if (!session) {
+      if (pathname !== '/login') goto('/login')
+      authChecked = true
+      return
     }
+
+    if (pathname === '/login') {
+      authChecked = true
+      return
+    }
+
+    if (pathname !== '/onboarding') {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('onboarding_completed')
+        .eq('id', session.user.id)
+        .single()
+
+      if (profile && !profile.onboarding_completed) {
+        goto('/onboarding')
+        authChecked = true
+        return
+      }
+    }
+
+    authChecked = true
   })
 
-  $: isLogin = $page.url.pathname === '/login'
+  $: isLogin = $page.url.pathname === '/login' || $page.url.pathname === '/onboarding'
 </script>
 
-{#key $navigating?.to?.url.pathname}
-  <div in:fade={{ duration: 150, delay: 50 }}>
-    <slot />
-  </div>
-{/key}
+{#if authChecked}
+  {#key $navigating?.to?.url.pathname}
+    <div in:fade={{ duration: 150, delay: 50 }}>
+      <slot />
+    </div>
+  {/key}
 
-{#if !isLogin}
-  <nav class="bottom-nav">
-    <a href="/" class:active={$page.url.pathname === '/'}>
-      <Home size={22} strokeWidth={1.5} />
-      <span>Home</span>
-    </a>
+  {#if !isLogin}
+    <nav class="bottom-nav">
+      <a href="/" class:active={$page.url.pathname === '/'}>
+        <Home size={22} strokeWidth={1.5} />
+        <span>Home</span>
+      </a>
 
-    <a href="/spots" class:active={$page.url.pathname.startsWith('/spots')}>
-      <MapPin size={22} strokeWidth={1.5} />
-      <span>Spots</span>
-    </a>
+      <a href="/spots" class:active={$page.url.pathname.startsWith('/spots')}>
+        <MapPin size={22} strokeWidth={1.5} />
+        <span>Spots</span>
+      </a>
 
-    <a href="/calculator" class:active={$page.url.pathname === '/calculator'}>
-      <Calculator size={22} strokeWidth={1.5} />
-      <span>Calculate</span>
-    </a>
+      <a href="/calculator" class:active={$page.url.pathname === '/calculator'}>
+        <Calculator size={22} strokeWidth={1.5} />
+        <span>Calculate</span>
+      </a>
 
-    <a href="/profile" class:active={$page.url.pathname === '/profile'}>
-      <User size={22} strokeWidth={1.5} />
-      <span>Profile</span>
-    </a>
-  </nav>
+      <a href="/profile" class:active={$page.url.pathname === '/profile'}>
+        <User size={22} strokeWidth={1.5} />
+        <span>Profile</span>
+      </a>
+    </nav>
+  {/if}
 {/if}
 
 <style>

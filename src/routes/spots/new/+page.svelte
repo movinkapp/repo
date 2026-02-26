@@ -28,6 +28,18 @@
     loading = true
     error = ''
 
+    if (!studio_name || !city || !country || !start_date || !end_date || !deal_value) {
+      error = 'Please fill in all required fields.'
+      loading = false
+      return
+    }
+
+    if (new Date(end_date) < new Date(start_date)) {
+      error = 'End date must be after start date.'
+      loading = false
+      return
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
     const exchange_rate = await getExchangeRate(currency)
 
@@ -199,7 +211,7 @@
     text-transform: uppercase;
   }
 
-  input, select, textarea {
+  input, textarea {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -213,8 +225,32 @@
     width: 100%;
   }
 
-  input:focus, select:focus, textarea:focus {
+  input:focus, textarea:focus {
     border-color: var(--text-2);
+  }
+
+  select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    padding: 12px 14px;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  select:focus {
+    border-color: var(--text-2);
+    outline: none;
   }
 
   input::placeholder, textarea::placeholder {
