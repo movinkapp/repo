@@ -2,6 +2,7 @@
   import { supabase } from '$lib/supabase.js'
   import { onMount } from 'svelte'
   import { Calculator } from 'lucide-svelte'
+  import { getStatus, formatDate } from '$lib/utils.js'
 
   let userName = ''
   let spots = []
@@ -14,14 +15,6 @@
     return 'Good evening'
   }
 
-  function getStatus(spot) {
-    const today = new Date()
-    const start = new Date(spot.start_date)
-    const end = new Date(spot.end_date)
-    if (today < start) return 'upcoming'
-    if (today > end) return 'completed'
-    return 'active'
-  }
 
   function daysUntil(date) {
     const today = new Date()
@@ -30,9 +23,6 @@
     return diff
   }
 
-  function formatDate(date) {
-    return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  }
 
   onMount(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -304,7 +294,6 @@
   .card-cta {
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-style: solid;
   }
 
   .card-main-row {

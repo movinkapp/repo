@@ -2,18 +2,11 @@
   import { supabase } from '$lib/supabase.js'
   import { onMount } from 'svelte'
   import { MapPin, Plus, Calendar } from 'lucide-svelte'
+  import { getStatus, formatDate, formatDeal } from '$lib/utils.js'
 
   let spots = []
   let loading = true
 
-  function getStatus(spot) {
-    const today = new Date()
-    const start = new Date(spot.start_date)
-    const end = new Date(spot.end_date)
-    if (today < start) return 'upcoming'
-    if (today > end) return 'completed'
-    return 'active'
-  }
 
   function getStatusLabel(status) {
     const labels = {
@@ -24,9 +17,6 @@
     return labels[status] || status
   }
 
-  function formatDate(date) {
-    return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  }
 
   onMount(async () => {
     const { data, error } = await supabase
@@ -76,11 +66,7 @@
               <Calendar size={12} strokeWidth={1.5} />
               {formatDate(spot.start_date)} → {formatDate(spot.end_date)}
             </p>
-            <p class="deal">
-              {spot.deal_type === 'flat_daily' 
-                ? spot.deal_value + ' ' + spot.currency + '/day' 
-                : spot.deal_value + '% commission'}
-            </p>
+            <p class="deal">{formatDeal(spot)}</p>
           </div>
         </a>
       {/each}

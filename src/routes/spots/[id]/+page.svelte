@@ -3,6 +3,7 @@
   import { onMount } from 'svelte'
   import { page } from '$app/stores'
   import { ChevronLeft, Plus, MapPin, X } from 'lucide-svelte'
+  import { formatDate, formatDeal } from '$lib/utils.js'
 
   let spot = null
   let sessions = []
@@ -51,9 +52,6 @@
     return session.value * (1 - spot.deal_value / 100)
   }
 
-  function formatDate(date) {
-    return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  }
 
   function capitalize(str) {
     if (!str) return ''
@@ -136,11 +134,7 @@
           <MapPin size={12} strokeWidth={1.5} />
           {spot.city}, {spot.country}
         </p>
-        <span class="deal-tag">
-          {spot.deal_type === 'flat_daily'
-            ? spot.deal_value + ' ' + spot.currency + '/day'
-            : spot.deal_value + '% commission'}
-        </span>
+        <span class="deal-tag">{formatDeal(spot)}</span>
       </div>
     </div>
   </div>
@@ -420,7 +414,7 @@
   .summary-label {
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--text-3);
     margin-bottom: 4px;
@@ -533,14 +527,16 @@
     color: var(--text-3);
   }
 
+
+
   input {
-    background: var(--surface-2);
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text);
     font-family: var(--font-body);
-    font-size: 14px;
-    padding: 10px 12px;
+    font-size: 15px;
+    padding: 12px 14px;
     transition: border-color 0.2s;
     -webkit-appearance: none;
     appearance: none;
@@ -589,8 +585,6 @@
 
   /* Compact toggle style for deposit */
   .deposit-row .toggle {
-    gap: 6px;
-    padding: 3px;
     max-width: 260px;
   }
 
@@ -608,9 +602,9 @@
     border: none;
     border-radius: var(--radius-sm);
     font-family: var(--font-display);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
-    padding: 12px;
+    padding: 14px;
     cursor: pointer;
     transition: opacity 0.2s;
     width: 100%;

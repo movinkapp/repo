@@ -195,6 +195,8 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .field {
@@ -205,8 +207,8 @@
 
   label {
     font-size: 12px;
-    font-weight: 500;
-    color: var(--text-2);
+    font-weight: 600;
+    color: var(--text-3);
     letter-spacing: 0.5px;
     text-transform: uppercase;
   }
@@ -223,6 +225,9 @@
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   input:focus, textarea:focus {
@@ -295,28 +300,28 @@
   .toggle {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: var(--surface);
+    background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 4px;
-    gap: 4px;
+    padding: 3px;
+    gap: 3px;
   }
 
   .toggle button {
     background: none;
     border: none;
-    border-radius: 6px;
-    color: var(--text-2);
+    border-radius: 5px;
+    color: var(--text-3);
     font-family: var(--font-body);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    padding: 10px;
+    padding: 8px 4px;
     cursor: pointer;
     transition: all 0.2s;
   }
 
   .toggle button.active {
-  background: var(--text);
-  color: var(--bg);
-}
+    background: var(--text);
+    color: var(--bg);
+  }
 </style>

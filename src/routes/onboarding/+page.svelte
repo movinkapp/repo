@@ -26,8 +26,8 @@
         <path d="M75 20 L75 35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
       </svg>`,
       label: 'Track',
-      title: 'Session by session,\nall tracked.',
-      body: 'Log each tattoo session as it happens. Gross, net, costs — your numbers, always clear.'
+      title: 'Your numbers,\nalways clear.',
+      body: 'Log each session as it happens — gross, net, costs. Everything in one place, no spreadsheets.'
     },
     {
       icon: `<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -40,7 +40,7 @@
       </svg>`,
       label: 'Decide',
       title: 'Know before\nyou say yes.',
-      body: 'Use the calculator to see if a spot is worth it — before you book the flight.'
+      body: 'Not every guest spot is worth it. Run the numbers first — flights, deal, sessions. See the real picture.'
     }
   ]
 

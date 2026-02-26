@@ -150,8 +150,8 @@
 
   label {
     font-size: 12px;
-    font-weight: 500;
-    color: var(--text-2);
+    font-weight: 600;
+    color: var(--text-3);
     letter-spacing: 0.5px;
     text-transform: uppercase;
   }

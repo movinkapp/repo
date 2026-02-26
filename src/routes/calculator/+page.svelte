@@ -6,6 +6,8 @@
   let accommodation = ''
   let other = ''
 
+  let num_days = ''
+
   let currency = 'EUR'
   const currencySymbols = { EUR: '€', GBP: '£', USD: '$', BRL: 'R$', AUD: 'A$', JPY: '¥', CHF: 'CHF', CAD: 'CA$' }
   $: symbol = currencySymbols[currency] || currency
@@ -19,7 +21,7 @@
   $: breakEven = artistKeeps > 0 && totalCosts > 0 ? Math.ceil(totalCosts / artistKeeps) : 0
   $: hasData = av > 0 && dv > 0
 
-  $: projections = [1, 2, 3, 4, 5, 6, 7].map(n => ({
+  $: projections = Array.from({ length: Math.max(1, Math.min(30, Number(num_days) || 7)) }, (_, i) => i + 1).map(n => ({
     sessions: n,
     net: (artistKeeps * n) - totalCosts,
     viable: (artistKeeps * n) >= totalCosts
@@ -45,15 +47,6 @@
         </div>
       </div>
 
-      <div class="field">
-        <p class="field-label">Currency</p>
-        <div class="toggle" style="grid-template-columns: 1fr 1fr 1fr;">
-          {#each ['EUR', 'GBP', 'USD'] as c}
-            <button type="button" class:active={currency === c} onclick={() => currency = c}>{c}</button>
-          {/each}
-        </div>
-      </div>
-
       <div class="two-col">
         <div class="field">
           <p class="field-label">{deal_type === 'percentage' ? 'Studio commission' : 'Daily rate'}</p>
@@ -68,6 +61,23 @@
             <input type="number" bind:value={avg_session} placeholder="0" inputmode="numeric" />
             <span class="unit">{symbol}</span>
           </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <p class="field-label">Currency</p>
+        <div class="toggle" style="grid-template-columns: 1fr 1fr 1fr;">
+          {#each ['EUR', 'GBP', 'USD'] as c}
+            <button type="button" class:active={currency === c} onclick={() => currency = c}>{c}</button>
+          {/each}
+        </div>
+      </div>
+
+      <div class="field">
+        <p class="field-label">Days planned</p>
+        <div class="input-wrap">
+          <input type="number" bind:value={num_days} placeholder="0" inputmode="numeric" min="1" max="30" />
+          <span class="unit">days</span>
         </div>
       </div>
     </div>
@@ -268,7 +278,7 @@
     font-family: var(--font-body);
     font-size: 13px;
     font-weight: 500;
-    padding: 9px 4px;
+    padding: 8px 4px;
     cursor: pointer;
     transition: all 0.2s;
   }
