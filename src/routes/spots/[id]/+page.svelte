@@ -2,7 +2,7 @@
   import { supabase } from '$lib/supabase.js'
   import { onMount } from 'svelte'
   import { page } from '$app/stores'
-  import { ChevronLeft, Plus, MapPin, Calendar, TrendingUp, X } from 'lucide-svelte'
+  import { ChevronLeft, Plus, MapPin, X } from 'lucide-svelte'
 
   let spot = null
   let sessions = []
@@ -11,7 +11,6 @@
   let showSessionForm = false
   let showCostForm = false
 
-  // session form
   let date = ''
   let status = 'confirmed'
   let session_type = 'full_day'
@@ -21,7 +20,6 @@
   let payment_method = 'cash'
   let notes = ''
 
-  // cost form
   let cost_type = 'flight'
   let cost_amount = ''
   let cost_date = ''
@@ -31,22 +29,13 @@
     const id = $page.params.id
 
     const { data: spotData } = await supabase
-      .from('spots')
-      .select('*')
-      .eq('id', id)
-      .single()
+      .from('spots').select('*').eq('id', id).single()
 
     const { data: sessionsData } = await supabase
-      .from('sessions')
-      .select('*')
-      .eq('spot_id', id)
-      .order('date', { ascending: true })
+      .from('sessions').select('*').eq('spot_id', id).order('date', { ascending: true })
 
     const { data: costsData } = await supabase
-      .from('costs')
-      .select('*')
-      .eq('spot_id', id)
-      .order('date', { ascending: true })
+      .from('costs').select('*').eq('spot_id', id).order('date', { ascending: true })
 
     spot = spotData
     sessions = sessionsData || []
@@ -56,20 +45,8 @@
 
   function calcArtist(session) {
     if (!session.value) return 0
-    if (spot.deal_type === 'flat_daily') {
-      return session.value - spot.deal_value
-    } else {
-      return session.value * (1 - spot.deal_value / 100)
-    }
-  }
-
-  function calcStudio(session) {
-    if (!session.value) return 0
-    if (spot.deal_type === 'flat_daily') {
-      return spot.deal_value
-    } else {
-      return session.value * (spot.deal_value / 100)
-    }
+    if (spot.deal_type === 'flat_daily') return session.value - spot.deal_value
+    return session.value * (1 - spot.deal_value / 100)
   }
 
   function formatDate(date) {
@@ -130,7 +107,6 @@
 {:else}
 <div class="page">
 
-  <!-- HEADER -->
   <div class="header">
     <a href="/spots" class="back">
       <ChevronLeft size={20} strokeWidth={1.5} />
@@ -146,16 +122,14 @@
           {spot.city}, {spot.country}
         </p>
         <span class="deal-tag">
-          {spot.deal_type === 'flat_daily' 
-            ? spot.deal_value + ' ' + spot.currency + '/day' 
+          {spot.deal_type === 'flat_daily'
+            ? spot.deal_value + ' ' + spot.currency + '/day'
             : spot.deal_value + '% commission'}
         </span>
       </div>
     </div>
   </div>
- 
 
-  <!-- SUMMARY -->
   <div class="summary">
     <div class="summary-top">
       <div class="summary-item">
@@ -176,16 +150,11 @@
     </div>
   </div>
 
-  <!-- SESSIONS -->
   <div class="section">
     <div class="section-header">
       <p class="section-label">Sessions</p>
       <button class="btn-add" onclick={() => { showSessionForm = !showSessionForm; showCostForm = false }}>
-        {#if showSessionForm}
-          <X size={14} strokeWidth={2} />
-        {:else}
-          <Plus size={14} strokeWidth={2} />
-        {/if}
+        {#if showSessionForm}<X size={14} strokeWidth={2} />{:else}<Plus size={14} strokeWidth={2} />{/if}
         {showSessionForm ? 'Cancel' : 'Add'}
       </button>
     </div>
@@ -230,10 +199,10 @@
         </div>
 
         <div class="deposit-row">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={deposit_received} />
-            Deposit received
-          </label>
+          <div class="toggle" style="max-width: 180px; flex-shrink: 0;">
+            <button type="button" class:active={!deposit_received} onclick={() => deposit_received = false}>No deposit</button>
+            <button type="button" class:active={deposit_received} onclick={() => deposit_received = true}>Received</button>
+          </div>
           {#if deposit_received}
             <input bind:value={deposit_value} type="number" placeholder="Amount" class="deposit-input" />
           {/if}
@@ -264,16 +233,11 @@
     {/if}
   </div>
 
-  <!-- COSTS -->
   <div class="section">
     <div class="section-header">
       <p class="section-label">Costs</p>
       <button class="btn-add" onclick={() => { showCostForm = !showCostForm; showSessionForm = false }}>
-        {#if showCostForm}
-          <X size={14} strokeWidth={2} />
-        {:else}
-          <Plus size={14} strokeWidth={2} />
-        {/if}
+        {#if showCostForm}<X size={14} strokeWidth={2} />{:else}<Plus size={14} strokeWidth={2} />{/if}
         {showCostForm ? 'Cancel' : 'Add'}
       </button>
     </div>
@@ -282,7 +246,7 @@
       <div class="form-card">
         <div class="field">
           <p class="field-label">Type</p>
-          <div class="toggle">
+          <div class="toggle four">
             <button type="button" class:active={cost_type === 'flight'} onclick={() => cost_type = 'flight'}>Flight</button>
             <button type="button" class:active={cost_type === 'accommodation'} onclick={() => cost_type = 'accommodation'}>Stay</button>
             <button type="button" class:active={cost_type === 'food'} onclick={() => cost_type = 'food'}>Food</button>
@@ -336,9 +300,7 @@
     letter-spacing: 4px;
   }
 
-  .page {
-    padding: 56px 24px 100px;
-  }
+  .page { padding: 56px 24px 100px; }
 
   .header {
     display: flex;
@@ -355,10 +317,7 @@
     transition: color 0.2s;
   }
 
-  .header-info {
-    flex: 1;
-    min-width: 0;
-  }
+  .header-info { flex: 1; min-width: 0; }
 
   .header-top {
     display: flex;
@@ -411,9 +370,6 @@
     white-space: nowrap;
   }
 
-  
-
-  /* SUMMARY */
   .summary {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -428,9 +384,7 @@
     margin-bottom: 16px;
   }
 
-  .summary-item {
-    flex: 1;
-  }
+  .summary-item { flex: 1; }
 
   .summary-divider-h {
     height: 1px;
@@ -463,25 +417,13 @@
     line-height: 1;
   }
 
-  .summary-net {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+  .summary-net { display: flex; flex-direction: column; gap: 4px; }
 
-  .currency {
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--text-2);
-  }
-
+  .currency { font-size: 14px; font-weight: 400; color: var(--text-2); }
   .positive { color: var(--upcoming); }
   .negative { color: var(--error); }
 
-  /* SECTIONS */
-  .section {
-    margin-bottom: 32px;
-  }
+  .section { margin-bottom: 32px; }
 
   .section-header {
     display: flex;
@@ -514,18 +456,9 @@
     transition: all 0.2s;
   }
 
-  .btn-add:active {
-    color: var(--text);
-    border-color: var(--text-3);
-  }
+  .btn-add:active { color: var(--text); border-color: var(--text-3); }
+  .empty-text { font-size: 14px; color: var(--text-3); padding: 16px 0; }
 
-  .empty-text {
-    font-size: 14px;
-    color: var(--text-3);
-    padding: 16px 0;
-  }
-
-  /* FORM CARD */
   .form-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -543,13 +476,17 @@
     gap: 12px;
   }
 
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
 
   label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .field-label {
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.5px;
@@ -571,16 +508,9 @@
     width: 100%;
   }
 
-  input:focus {
-    border-color: var(--text-2);
-    outline: none;
-  }
+  input:focus { border-color: var(--text-2); outline: none; }
+  input::placeholder { color: var(--text-3); }
 
-  input::placeholder {
-    color: var(--text-3);
-  }
-
-  /* TOGGLE */
   .toggle {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -591,9 +521,8 @@
     gap: 3px;
   }
 
-  .toggle.three {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
+  .toggle.three { grid-template-columns: 1fr 1fr 1fr; }
+  .toggle.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
 
   .toggle button {
     background: none;
@@ -609,42 +538,11 @@
     white-space: nowrap;
   }
 
-  .toggle button.active {
-    background: var(--text);
-    color: var(--bg);
-  }
+  .toggle button.active { background: var(--text); color: var(--bg); }
 
-  /* DEPOSIT */
-  .deposit-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+  .deposit-row { display: flex; align-items: center; gap: 12px; }
+  .deposit-input { flex: 1; }
 
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--text);
-    cursor: pointer;
-    text-transform: none;
-    letter-spacing: 0;
-    font-weight: 600;
-  }
-
-  .checkbox-label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--text);
-    flex: none;
-  }
-
-  .deposit-input {
-    flex: 1;
-  }
-
-  /* BTN PRIMARY */
   .btn-primary {
     background: var(--text);
     color: var(--bg);
@@ -659,11 +557,8 @@
     width: 100%;
   }
 
-  .btn-primary:active {
-    opacity: 0.8;
-  }
+  .btn-primary:active { opacity: 0.8; }
 
-  /* SESSION CARDS */
   .session-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -679,10 +574,7 @@
     margin-bottom: 8px;
   }
 
-  .session-date {
-    font-size: 14px;
-    font-weight: 600;
-  }
+  .session-date { font-size: 14px; font-weight: 600; }
 
   .session-net {
     font-family: var(--font-display);
@@ -691,11 +583,7 @@
     color: var(--upcoming);
   }
 
-  .session-bottom {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
+  .session-bottom { display: flex; gap: 6px; flex-wrap: wrap; }
 
   .tag {
     font-size: 11px;
@@ -705,7 +593,6 @@
     border-radius: 4px;
   }
 
-  /* COST CARDS */
   .cost-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -717,11 +604,7 @@
     align-items: center;
   }
 
-  .cost-type {
-    font-size: 14px;
-    font-weight: 500;
-    text-transform: capitalize;
-  }
+  .cost-type { font-size: 14px; font-weight: 500; text-transform: capitalize; }
 
   .cost-amount {
     font-family: var(--font-display);
