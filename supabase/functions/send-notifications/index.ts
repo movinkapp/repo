@@ -1,3 +1,5 @@
+/// <reference path="./deno.d.ts" />
+
 import webpush from 'npm:web-push'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -84,10 +86,10 @@ Deno.serve(async () => {
   // Envia todas as notificações
   const results = await Promise.allSettled(
     notifications.map(n =>
-      webpush.sendNotification(
-        n.subscription as webpush.PushSubscription,
-        JSON.stringify({ title: n.title, body: n.body, url: n.url })
-      )
+        webpush.sendNotification(
+          n.subscription as any,
+          JSON.stringify({ title: n.title, body: n.body, url: n.url })
+        )
     )
   )
 
