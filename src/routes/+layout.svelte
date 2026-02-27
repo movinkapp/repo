@@ -15,13 +15,13 @@
     const pathname = window.location.pathname
 
     if (!session) {
-      if (pathname !== '/login') goto('/login')
+      if (pathname !== '/login' && pathname !== '/') goto('/login')
       authChecked = true
       return
     }
 
     if (session && pathname === '/login') {
-      goto('/')
+      goto('/home')
       authChecked = true
       return
     }
@@ -43,7 +43,7 @@
     authChecked = true
   })
 
-  $: isLogin = $page.url.pathname === '/login' || $page.url.pathname === '/onboarding'
+  $: isLogin = $page.url.pathname === '/' || $page.url.pathname === '/login' || $page.url.pathname === '/onboarding'
 </script>
 
 {#if authChecked}
@@ -56,7 +56,7 @@
 
   {#if !isLogin}
     <nav class="bottom-nav">
-      <a href="/" class:active={$page.url.pathname === '/'}>
+      <a href="/home" class:active={$page.url.pathname === '/home'}>
         <Home size={22} strokeWidth={1.5} />
         <span>Home</span>
       </a>

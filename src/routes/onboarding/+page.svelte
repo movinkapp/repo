@@ -54,7 +54,7 @@
       .from('users')
       .update({ onboarding_completed: true })
       .eq('id', user.id)
-    goto('/')
+      goto('/home')
   }
 
   function next() {
