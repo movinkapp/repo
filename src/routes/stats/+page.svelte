@@ -8,6 +8,7 @@
   let sessions = []
   let costs = []
   let loading = true
+  let baseRate = 1
 
   const currentYear = new Date().getFullYear()
   let selectedYear = currentYear
@@ -38,13 +39,13 @@
     const artist = spot.deal_type === 'flat_daily'
       ? (s.value - spot.deal_value)
       : (s.value * (1 - spot.deal_value / 100))
-    return sum + (artist / rate)
+    return sum + (artist / rate * baseRate)
   }, 0)
 
   $: totalCostsYear = yearCosts.reduce((sum, c) => {
     const spot = spots.find(sp => sp.id === c.spot_id)
     const rate = spot?.exchange_rate || 1
-    return sum + (Number(c.amount) / rate)
+    return sum + (Number(c.amount) / rate * baseRate)
   }, 0)
 
   $: netProfit = totalGross - totalCostsYear
@@ -70,13 +71,13 @@
       const artist = spot.deal_type === 'flat_daily'
         ? (s.value - spot.deal_value)
         : (s.value * (1 - spot.deal_value / 100))
-      return sum + (artist / rate)
+      return sum + (artist / rate * baseRate)
     }, 0)
 
     const costsTotal = monthCosts.reduce((sum, c) => {
       const spot = spots.find(sp => sp.id === c.spot_id)
       const rate = spot?.exchange_rate || 1
-      return sum + (Number(c.amount) / rate)
+      return sum + (Number(c.amount) / rate * baseRate)
     }, 0)
     return { name, net: gross - costsTotal, gross, costs: costsTotal }
   })
@@ -89,16 +90,31 @@
   }
 
   // currency — convert all values to EUR base
-  $: currency = 'EUR'
+  let currency = 'EUR'
 
   onMount(async () => {
-    const { data: spotsData } = await supabase.from('spots').select('*')
-    const { data: sessionsData } = await supabase.from('sessions').select('*')
-    const { data: costsData } = await supabase.from('costs').select('*')
+    const { data: { user } } = await supabase.auth.getUser()
 
-    spots = spotsData || []
-    sessions = sessionsData || []
-    costs = costsData || []
+    const [spotsRes, sessionsRes, costsRes, profileRes] = await Promise.all([
+      supabase.from('spots').select('*'),
+      supabase.from('sessions').select('*'),
+      supabase.from('costs').select('*'),
+      supabase.from('users').select('base_currency').eq('id', user.id).single()
+    ])
+
+    spots = spotsRes.data || []
+    sessions = sessionsRes.data || []
+    costs = costsRes.data || []
+    currency = profileRes.data?.base_currency || 'EUR'
+
+    if (currency !== 'EUR') {
+      const res = await fetch(`https://api.frankfurter.app/latest?from=EUR&to=${currency}`)
+      const data = await res.json()
+      baseRate = data.rates[currency] || 1
+    } else {
+      baseRate = 1
+    }
+
     loading = false
   })
 </script>

@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation'
   import { toast } from '$lib/toast.js'
   import { ChevronLeft } from 'lucide-svelte'
+  import { currencySymbols } from '$lib/utils.js'
   import CalendarPicker from '$lib/components/CalendarPicker.svelte'
 
   let studio_name = ''
@@ -19,10 +20,6 @@
 
   const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD']
 
-  const currencySymbols = {
-    EUR: '€', GBP: '£', USD: '$', BRL: 'R$',
-    AUD: 'A$', JPY: '¥', CHF: 'CHF', CAD: 'CA$'
-  }
   $: symbol = currencySymbols[currency] || currency
 
   async function getExchangeRate(currency) {
@@ -103,15 +100,14 @@
       </div>
     </div>
 
-    <div class="col">
-      <div class="field">
-        <p class="field-label">From</p>
-        <CalendarPicker bind:value={start_date} markedDates={[]} />
-      </div>
-      <div class="field">
-        <p class="field-label">To</p>
-        <CalendarPicker bind:value={end_date} markedDates={[]} />
-      </div>
+    <div class="field">
+      <p class="field-label">Dates</p>
+      <CalendarPicker
+        rangeMode={true}
+        bind:rangeStart={start_date}
+        bind:rangeEnd={end_date}
+        markedDates={[]}
+      />
     </div>
 
     <div class="field">
@@ -207,12 +203,6 @@
     gap: 12px;
     min-width: 0;
     overflow: hidden;
-  }
-
-  .col {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
   }
 
   .field {

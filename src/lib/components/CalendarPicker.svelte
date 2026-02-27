@@ -1,23 +1,32 @@
 <script>
   import { createEventDispatcher } from 'svelte'
 
-  export let value = null        // Date | null — dia seleccionado
-  export let spotStart = null    // string "YYYY-MM-DD"
-  export let spotEnd = null      // string "YYYY-MM-DD"
-  export let markedDates = []    // array de strings "YYYY-MM-DD"
+  // Single date mode (default)
+  export let value = null
+  export let spotStart = null
+  export let spotEnd = null
+  export let markedDates = []
+
+  // Range mode
+  export let rangeMode = false
+  export let rangeStart = null
+  export let rangeEnd = null
 
   const dispatch = createEventDispatcher()
 
   const DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
-  let viewing = value
-    ? new Date(value.getFullYear(), value.getMonth(), 1)
-    : spotStart
-      ? new Date(spotStart + 'T12:00:00').setDate(1) && new Date(new Date(spotStart + 'T12:00:00').getFullYear(), new Date(spotStart + 'T12:00:00').getMonth(), 1)
-      : new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  let viewing = (() => {
+    const base = rangeMode ? rangeStart : value
+    if (base) return new Date(base.getFullYear(), base.getMonth(), 1)
+    if (spotStart) {
+      const d = new Date(spotStart + 'T12:00:00')
+      return new Date(d.getFullYear(), d.getMonth(), 1)
+    }
+    return new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  })()
 
-  // normalize to first of month
   $: viewing = new Date(viewing.getFullYear(), viewing.getMonth(), 1)
 
   function toStr(d) {
@@ -39,35 +48,56 @@
     const firstDay = new Date(year, month, 1)
     const lastDay = new Date(year, month + 1, 0)
 
-    // Monday = 0, so shift Sunday (0) to 6
     let startDow = firstDay.getDay()
     startDow = startDow === 0 ? 6 : startDow - 1
 
     const cells = []
+    for (let i = 0; i < startDow; i++) cells.push(null)
 
-    // empty cells before first day
-    for (let i = 0; i < startDow; i++) {
-      cells.push(null)
-    }
-
-    // actual days
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
       const isInRange = (!spotStart || dateStr >= spotStart) && (!spotEnd || dateStr <= spotEnd)
       const isMarked = markedDates.includes(dateStr)
-      const isSelected = value && toStr(value) === dateStr
+      const isSelected = !rangeMode && value && toStr(value) === dateStr
       const isToday = toStr(new Date()) === dateStr
 
-      cells.push({ d, dateStr, isInRange, isMarked, isSelected, isToday })
+      // range mode
+      const rsStr = rangeStart ? toStr(rangeStart) : null
+      const reStr = rangeEnd ? toStr(rangeEnd) : null
+      const isRangeStart = rangeMode && rsStr === dateStr
+      const isRangeEnd = rangeMode && reStr === dateStr
+      const isInSelectedRange = rangeMode && rsStr && reStr && dateStr > rsStr && dateStr < reStr
+
+      cells.push({ d, dateStr, isInRange, isMarked, isSelected, isToday, isRangeStart, isRangeEnd, isInSelectedRange })
     }
 
     return cells
   })()
 
   function select(cell) {
-    if (!cell || !cell.isInRange) return
-    value = new Date(cell.dateStr + 'T12:00:00')
-    dispatch('select', value)
+    if (!cell) return
+    if (rangeMode) {
+      if (!rangeStart || (rangeStart && rangeEnd)) {
+        // start fresh
+        rangeStart = new Date(cell.dateStr + 'T12:00:00')
+        rangeEnd = null
+        dispatch('rangeChange', { start: rangeStart, end: null })
+      } else {
+        // have start, picking end
+        const picked = new Date(cell.dateStr + 'T12:00:00')
+        if (picked < rangeStart) {
+          rangeEnd = rangeStart
+          rangeStart = picked
+        } else {
+          rangeEnd = picked
+        }
+        dispatch('rangeChange', { start: rangeStart, end: rangeEnd })
+      }
+    } else {
+      if (!cell.isInRange) return
+      value = new Date(cell.dateStr + 'T12:00:00')
+      dispatch('select', value)
+    }
   }
 </script>
 
@@ -77,6 +107,13 @@
     <p class="nav-label">{MONTHS[viewing.getMonth()]} {viewing.getFullYear()}</p>
     <button class="nav-btn" onclick={nextMonth} type="button">›</button>
   </div>
+
+  {#if rangeMode && (rangeStart || rangeEnd)}
+    <p class="range-preview">
+      {rangeStart ? toStr(rangeStart) : '···'}
+      {#if rangeEnd} → {toStr(rangeEnd)}{:else} → pick end date{/if}
+    </p>
+  {/if}
 
   <div class="grid">
     {#each DAYS as day}
@@ -90,16 +127,16 @@
         <button
           type="button"
           class="cell day"
-          class:in-range={cell.isInRange}
-          class:out-range={!cell.isInRange}
-          class:selected={cell.isSelected}
-          class:today={cell.isToday && !cell.isSelected}
+          class:in-range={!rangeMode && cell.isInRange}
+          class:out-range={!rangeMode && !cell.isInRange}
+          class:selected={cell.isSelected || cell.isRangeStart || cell.isRangeEnd}
+          class:range-fill={cell.isInSelectedRange}
+          class:today={cell.isToday && !cell.isSelected && !cell.isRangeStart && !cell.isRangeEnd}
           class:marked={cell.isMarked && !cell.isSelected}
           onclick={() => select(cell)}
-          disabled={!cell.isInRange}
         >
           {cell.d}
-          {#if cell.isMarked}
+          {#if cell.isMarked && !cell.isSelected}
             <span class="dot"></span>
           {/if}
         </button>
@@ -144,8 +181,14 @@
     transition: color 0.2s;
   }
 
-  .nav-btn:active {
-    color: var(--text);
+  .nav-btn:active { color: var(--text); }
+
+  .range-preview {
+    font-size: 12px;
+    color: var(--text-3);
+    text-align: center;
+    margin-bottom: 12px;
+    font-weight: 500;
   }
 
   .grid {
@@ -177,9 +220,7 @@
     gap: 2px;
   }
 
-  .cell.empty {
-    background: none;
-  }
+  .cell.empty { background: none; }
 
   .cell.day {
     border: none;
@@ -189,14 +230,7 @@
     transition: background 0.15s;
   }
 
-  .cell.day.in-range {
-    color: var(--text);
-    cursor: pointer;
-  }
-
-  .cell.day.in-range:active {
-    background: var(--surface-2);
-  }
+  .cell.day.in-range { color: var(--text); }
 
   .cell.day.out-range {
     color: var(--text-3);
@@ -204,13 +238,17 @@
     cursor: not-allowed;
   }
 
-  .cell.day.today {
-    border: 1px solid var(--border);
-  }
+  .cell.day.today { border: 1px solid var(--border); }
 
   .cell.day.selected {
     background: var(--text);
     color: var(--bg);
+  }
+
+  .cell.day.range-fill {
+    background: var(--surface-2);
+    color: var(--text);
+    border-radius: 0;
   }
 
   .cell.day.marked {
@@ -227,7 +265,5 @@
     bottom: 3px;
   }
 
-  .cell.selected .dot {
-    background: var(--bg);
-  }
+  .cell.selected .dot { background: var(--bg); }
 </style>

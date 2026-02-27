@@ -4,15 +4,36 @@
   import { onMount } from 'svelte'
   import { LogOut, BarChart2 } from 'lucide-svelte'
   import { toast } from '$lib/toast.js'
+  import { currencySymbols } from '$lib/utils.js'
 
   let user = null
+  let baseCurrency = 'EUR'
   let loading = true
+
+  const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD']
 
   onMount(async () => {
     const { data: { user: u } } = await supabase.auth.getUser()
     user = u
+
+    const { data: profile } = await supabase
+      .from('users')
+      .select('base_currency')
+      .eq('id', u.id)
+      .single()
+
+    baseCurrency = profile?.base_currency || 'EUR'
     loading = false
   })
+
+  async function setBaseCurrency(c) {
+    baseCurrency = c
+    await supabase
+      .from('users')
+      .update({ base_currency: c })
+      .eq('id', user.id)
+    toast('Base currency updated')
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -48,6 +69,22 @@
     </div>
 
     <div class="section">
+      <p class="section-label">Base currency</p>
+      <p class="section-hint">All analytics are converted to this currency.</p>
+      <div class="currency-grid">
+        {#each currencies as c}
+          <button
+            class="currency-btn"
+            class:active={baseCurrency === c}
+            onclick={() => setBaseCurrency(c)}>
+            <span class="currency-symbol">{currencySymbols[c] || c}</span>
+            <span class="currency-code">{c}</span>
+          </button>
+        {/each}
+      </div>
+    </div>
+
+    <div class="section">
       <p class="section-label">Account</p>
       <div class="menu">
         <button class="menu-item logout" onclick={handleLogout}>
@@ -61,9 +98,7 @@
 </div>
 
 <style>
-  .page {
-    padding: 56px 24px 100px;
-  }
+  .page { padding: 56px 24px 100px; }
 
   .loading {
     display: flex;
@@ -105,14 +140,9 @@
     margin-bottom: 2px;
   }
 
-  .email {
-    font-size: 13px;
-    color: var(--text-2);
-  }
+  .email { font-size: 13px; color: var(--text-2); }
 
-  .section {
-    margin-bottom: 28px;
-  }
+  .section { margin-bottom: 28px; }
 
   .section-label {
     font-size: 11px;
@@ -120,7 +150,51 @@
     letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--text-3);
-    margin-bottom: 10px;
+    margin-bottom: 6px;
+  }
+
+  .section-hint {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-bottom: 12px;
+  }
+
+  .currency-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .currency-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .currency-btn.active {
+    border-color: var(--text);
+    background: var(--surface-2);
+  }
+
+  .currency-symbol {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .currency-code {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-3);
   }
 
   .card-cta {
@@ -134,9 +208,7 @@
     transition: border-color 0.2s;
   }
 
-  .card-cta:active {
-    border-color: var(--text-3);
-  }
+  .card-cta:active { border-color: var(--text-3); }
 
   .cta-header {
     display: flex;
@@ -162,10 +234,7 @@
     margin-bottom: 6px;
   }
 
-  .cta-hint {
-    font-size: 13px;
-    color: var(--text-3);
-  }
+  .cta-hint { font-size: 13px; color: var(--text-3); }
 
   .menu {
     background: var(--surface);
@@ -189,11 +258,6 @@
     text-align: left;
   }
 
-  .menu-item:active {
-    background: var(--surface-2);
-  }
-
-  .logout {
-    color: var(--error);
-  }
+  .menu-item:active { background: var(--surface-2); }
+  .logout { color: var(--error); }
 </style>

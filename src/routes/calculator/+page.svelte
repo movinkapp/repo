@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/stores'
   import { onMount } from 'svelte'
-  import { formatAmount } from '$lib/utils.js'
+  import { currencySymbols, formatAmount } from '$lib/utils.js'
 
   let deal_type = 'percentage'
   let deal_value = ''
@@ -20,7 +20,6 @@
   })
 
   let currency = 'EUR'
-  const currencySymbols = { EUR: '€', GBP: '£', USD: '$', BRL: 'R$', AUD: 'A$', JPY: '¥', CHF: 'CHF', CAD: 'CA$' }
   $: symbol = currencySymbols[currency] || currency
 
   $: dv = Number(deal_value) || 0

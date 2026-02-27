@@ -15,20 +15,6 @@
     return labels[status] || status
   }
 
-  function daysChip(spot) {
-    const now = new Date()
-    now.setHours(0, 0, 0, 0)
-    if (getStatus(spot) === 'upcoming') {
-      const diff = Math.ceil((new Date(spot.start_date) - now) / 86400000)
-      return 'in ' + diff + 'd'
-    }
-    if (getStatus(spot) === 'active') {
-      const diff = Math.ceil((new Date(spot.end_date) - now) / 86400000)
-      return diff + 'd left'
-    }
-    return null
-  }
-
   onMount(async () => {
     const { data, error } = await supabase
       .from('spots')

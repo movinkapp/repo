@@ -5,7 +5,7 @@
   import { goto } from '$app/navigation'
   import { ChevronLeft, Plus, MapPin, X, Trash2, Pencil } from 'lucide-svelte'
   import { formatDate, formatDeal, formatAmount } from '$lib/utils.js'
-  import { toast } from '$lib/toast.js'
+  import { toast, toastConfirm } from '$lib/toast.js'
   import CalendarPicker from '$lib/components/CalendarPicker.svelte'
 
   let spot = null
@@ -36,8 +36,6 @@
   // edit state
   let editingSessionId = null
   let editingCostId = null
-  let confirmDeleteSessionId = null
-  let confirmDeleteCostId = null
 
   // edit session fields
   let edit_date = null
@@ -193,15 +191,12 @@
   }
 
   async function deleteSession(id) {
-    if (confirmDeleteSessionId !== id) {
-      confirmDeleteSessionId = id
-      return
-    }
-    confirmDeleteSessionId = null
-    const { error } = await supabase.from('sessions').delete().eq('id', id)
-    if (error) { toast('Could not delete session. Try again.', 'error'); return }
-    sessions = sessions.filter(s => s.id !== id)
-    toast('Session deleted')
+    toastConfirm('Delete this session?', async () => {
+      const { error } = await supabase.from('sessions').delete().eq('id', id)
+      if (error) { toast('Could not delete session. Try again.', 'error'); return }
+      sessions = sessions.filter(s => s.id !== id)
+      toast('Session deleted')
+    })
   }
 
   function startEditCost(cost) {
@@ -243,20 +238,16 @@
   }
 
   async function deleteCost(id) {
-    if (confirmDeleteCostId !== id) {
-      confirmDeleteCostId = id
-      return
-    }
-    confirmDeleteCostId = null
-    const { error } = await supabase.from('costs').delete().eq('id', id)
-    if (error) { toast('Could not delete cost. Try again.', 'error'); return }
-    costs = costs.filter(c => c.id !== id)
-    toast('Cost deleted')
+    toastConfirm('Delete this cost?', async () => {
+      const { error } = await supabase.from('costs').delete().eq('id', id)
+      if (error) { toast('Could not delete cost. Try again.', 'error'); return }
+      costs = costs.filter(c => c.id !== id)
+      toast('Cost deleted')
+    })
   }
 
   $: sessionDates = sessions.map(s => s.date).filter(Boolean)
   $: isDateLogged = (d) => d && sessionDates.includes(toLocalDateStr(d))
-  $: isOutsideSpot = (d) => d && spot && (toLocalDateStr(d) < spot.start_date || toLocalDateStr(d) > spot.end_date)
   $: totalArtist = sessions.reduce((sum, s) => sum + calcArtist(s), 0)
   $: totalCosts = costs.reduce((sum, c) => sum + Number(c.amount), 0)
   $: netProfit = totalArtist - totalCosts
@@ -468,16 +459,9 @@
                 <button class="btn-icon" onclick={() => startEditSession(session)} aria-label="Edit session">
                   <Pencil size={13} strokeWidth={1.5} />
                 </button>
-                {#if confirmDeleteSessionId === session.id}
-                  <button class="btn-confirm-delete" onclick={() => deleteSession(session.id)}>Delete?</button>
-                  <button class="btn-icon" onclick={() => confirmDeleteSessionId = null}>
-                    <X size={13} strokeWidth={2} />
-                  </button>
-                {:else}
-                  <button class="btn-icon btn-icon-danger" onclick={() => deleteSession(session.id)} aria-label="Delete session">
-                    <Trash2 size={13} strokeWidth={1.5} />
-                  </button>
-                {/if}
+                <button class="btn-icon btn-icon-danger" onclick={() => deleteSession(session.id)} aria-label="Delete session">
+                  <Trash2 size={13} strokeWidth={1.5} />
+                </button>
               </div>
             </div>
           </div>
@@ -599,16 +583,9 @@
                 <button class="btn-icon" onclick={() => startEditCost(cost)} aria-label="Edit cost">
                   <Pencil size={13} strokeWidth={1.5} />
                 </button>
-                {#if confirmDeleteCostId === cost.id}
-                  <button class="btn-confirm-delete" onclick={() => deleteCost(cost.id)}>Delete?</button>
-                  <button class="btn-icon" onclick={() => confirmDeleteCostId = null}>
-                    <X size={13} strokeWidth={2} />
-                  </button>
-                {:else}
-                  <button class="btn-icon btn-icon-danger" onclick={() => deleteCost(cost.id)} aria-label="Delete cost">
-                    <Trash2 size={13} strokeWidth={1.5} />
-                  </button>
-                {/if}
+                <button class="btn-icon btn-icon-danger" onclick={() => deleteCost(cost.id)} aria-label="Delete cost">
+                  <Trash2 size={13} strokeWidth={1.5} />
+                </button>
               </div>
             </div>
           </div>
@@ -1042,18 +1019,4 @@
     opacity: 0.8;
     padding: 0 2px;
   }
-  .btn-confirm-delete {
-    background: none;
-    border: none;
-    color: var(--error);
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 4px 6px;
-    border-radius: 4px;
-    transition: opacity 0.2s;
-  }
-
-  .btn-confirm-delete:active { opacity: 0.7; }
 </style>
