@@ -13,6 +13,7 @@
   let loading = true
   let notificationsEnabled = false
   let notifLoading = false
+  let notifPermission = 'default'
   let modalOpen = false
 
   const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
@@ -30,6 +31,9 @@
     baseCurrency = profile?.base_currency || 'EUR'
     loading = false
     notificationsEnabled = await isNotificationsEnabled()
+    if (typeof Notification !== 'undefined') {
+      notifPermission = Notification.permission
+    }
   })
 
   function openModal() {
@@ -144,7 +148,7 @@
     <div class="section">
       <p class="section-label">Notifications</p>
       <div class="menu">
-        {#if Notification.permission === 'denied'}
+        {#if notifPermission === 'denied'}
           <div class="menu-item">
             <div class="menu-item-left">
               <span class="menu-item-label">Push notifications</span>
