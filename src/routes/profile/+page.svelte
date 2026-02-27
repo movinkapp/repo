@@ -3,13 +3,16 @@
   import { goto } from '$app/navigation'
   import { onMount } from 'svelte'
   import { LogOut, BarChart2, ChevronRight } from 'lucide-svelte'
-  import { toast } from '$lib/toast.js'
+  import { toasts, toast } from '$lib/toast.js'
   import { currencySymbols, fadeSlide } from '$lib/utils.js'
+  import { requestNotificationPermission, isNotificationsEnabled, disableNotifications } from '$lib/notifications.js'
 
   let user = null
   let baseCurrency = 'EUR'
   let tempCurrency = 'EUR'
   let loading = true
+  let notificationsEnabled = false
+  let notifLoading = false
   let modalOpen = false
 
   const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
@@ -26,6 +29,7 @@
 
     baseCurrency = profile?.base_currency || 'EUR'
     loading = false
+    notificationsEnabled = await isNotificationsEnabled()
   })
 
   function openModal() {
@@ -41,6 +45,54 @@
       .update({ base_currency: baseCurrency })
       .eq('id', user.id)
     toast('Base currency updated')
+  }
+
+  async function toggleNotifications() {
+    if (notificationsEnabled) {
+      const confirmed = await new Promise((resolve) => {
+        toasts.update(t => [...t, {
+          id: 999,
+          message: 'Disable push notifications?',
+          type: 'confirm',
+          onConfirm: () => {
+            toasts.update(t => t.filter(x => x.id !== 999))
+            resolve(true)
+          },
+          onCancel: () => {
+            toasts.update(t => t.filter(x => x.id !== 999))
+            resolve(false)
+          }
+        }])
+      })
+      if (!confirmed) return
+      notifLoading = true
+      try {
+        await disableNotifications()
+        notificationsEnabled = false
+        toast('Notifications disabled')
+      } catch (e) {
+        toast('Could not disable notifications. Try again.', 'error')
+      } finally {
+        notifLoading = false
+      }
+    } else {
+      notifLoading = true
+      try {
+        const result = await requestNotificationPermission()
+        if (result.ok) {
+          notificationsEnabled = true
+          toast('Notifications enabled')
+        } else if (result.reason === 'denied') {
+          toast('Permission denied. Enable in browser settings.', 'error')
+        } else if (result.reason === 'not_supported') {
+          toast('Push notifications not supported in this browser.', 'error')
+        } else {
+          toast('Could not enable notifications. Try again.', 'error')
+        }
+      } finally {
+        notifLoading = false
+      }
+    }
   }
 
   async function handleLogout() {
@@ -86,6 +138,29 @@
           </div>
           <ChevronRight size={16} strokeWidth={1.5} class="chevron" />
         </button>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="section-label">Notifications</p>
+      <div class="menu">
+        {#if Notification.permission === 'denied'}
+          <div class="menu-item">
+            <div class="menu-item-left">
+              <span class="menu-item-label">Push notifications</span>
+              <span class="menu-item-value notif-blocked">Blocked in browser settings</span>
+            </div>
+            <span class="notif-status notif-off"></span>
+          </div>
+        {:else}
+          <button class="menu-item" onclick={toggleNotifications} disabled={notifLoading}>
+            <div class="menu-item-left">
+              <span class="menu-item-label">Push notifications</span>
+              <span class="menu-item-value">{notificationsEnabled ? 'Enabled' : 'Tap to enable'}</span>
+            </div>
+            <span class="notif-status {notificationsEnabled ? 'notif-on' : 'notif-off'}"></span>
+          </button>
+        {/if}
       </div>
     </div>
 
@@ -367,4 +442,17 @@
   .btn-primary:active { opacity: 0.8; }
 
   /* keyframes removed: handled by Svelte transitions (fadeSlide) */
+
+  .notif-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .notif-on { background: var(--upcoming); }
+  .notif-off { background: var(--border); }
+  .notif-blocked {
+    color: var(--error) !important;
+  }
 </style>

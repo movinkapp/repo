@@ -4,9 +4,9 @@
   import { fade } from 'svelte/transition'
   import { page } from '$app/stores'
   import { goto } from '$app/navigation'
-  import { ChevronLeft, Plus, MapPin, X, Trash2, Pencil, Settings2, ClipboardList, CheckCircle } from 'lucide-svelte'
+  import { ChevronLeft, Plus, MapPin, X, Trash2, Pencil, Settings2, ClipboardList, Check } from 'lucide-svelte'
   import { formatDate, formatDeal, formatAmount } from '$lib/utils.js'
-  import { toast, toastConfirm } from '$lib/toast.js'
+  import { toast } from '$lib/toast.js'
   import CalendarPicker from '$lib/components/CalendarPicker.svelte'
 
   let spot = null
@@ -15,7 +15,7 @@
   let loading = true
   let showSessionForm = false
   let showCostForm = false
-  let userBaseCurrency = 'EUR'
+  
 
   let showChecklist = false
 
@@ -28,7 +28,6 @@
   let edit_deal_type = 'flat_daily'
   let edit_deal_value = ''
   let edit_currency = 'EUR'
-  let edit_notes = ''
   let edit_spot_notes = ''
   let editSpotError = ''
   let savingSpot = false
@@ -115,14 +114,6 @@
     await initChecklistDefaults()
     sessions = sessionsData || []
     costs = costsData || []
-    // fetch user's profile to get base currency
-    const { data: profileData } = await supabase
-      .from('users')
-      .select('base_currency')
-      .eq('id', (await supabase.auth.getUser()).data.user.id)
-      .single()
-
-    userBaseCurrency = profileData?.base_currency || 'EUR'
     loading = false
   })
 
@@ -244,12 +235,11 @@
   }
 
   async function deleteSession(id) {
-    toastConfirm('Delete this session?', async () => {
-      const { error } = await supabase.from('sessions').delete().eq('id', id)
-      if (error) { toast('Could not delete session. Try again.', 'error'); return }
-      sessions = sessions.filter(s => s.id !== id)
-      toast('Session deleted')
-    })
+    if (!confirm('Delete this session?')) return
+    const { error } = await supabase.from('sessions').delete().eq('id', id)
+    if (error) { toast('Could not delete session. Try again.', 'error'); return }
+    sessions = sessions.filter(s => s.id !== id)
+    toast('Session deleted')
   }
 
   function startEditCost(cost) {
@@ -291,12 +281,11 @@
   }
 
   async function deleteCost(id) {
-    toastConfirm('Delete this cost?', async () => {
-      const { error } = await supabase.from('costs').delete().eq('id', id)
-      if (error) { toast('Could not delete cost. Try again.', 'error'); return }
-      costs = costs.filter(c => c.id !== id)
-      toast('Cost deleted')
-    })
+    if (!confirm('Delete this cost?')) return
+    const { error } = await supabase.from('costs').delete().eq('id', id)
+    if (error) { toast('Could not delete cost. Try again.', 'error'); return }
+    costs = costs.filter(c => c.id !== id)
+    toast('Cost deleted')
   }
 
   function startEditSpot() {
@@ -355,7 +344,6 @@
     const oldValue = !!spot[key]
     const newValue = !oldValue
     if (!spot) return
-    const itemLabel = checklistItems.find(i => i.key === key)?.label || key
     // optimistic update
     spot = { ...spot, [key]: newValue }
     const { error } = await supabase.from('spots').update({ [key]: newValue }).eq('id', spot.id)
@@ -367,12 +355,11 @@
   }
 
   async function deleteSpot() {
-    toastConfirm('Delete this entire spot?', async () => {
-      const { error } = await supabase.from('spots').delete().eq('id', spot.id)
-      if (error) { toast('Could not delete spot. Try again.', 'error'); return }
-      toast('Spot deleted')
-      goto('/spots')
-    })
+    if (!confirm('Delete this entire spot?')) return
+    const { error } = await supabase.from('spots').delete().eq('id', spot.id)
+    if (error) { toast('Could not delete spot. Try again.', 'error'); return }
+    toast('Spot deleted')
+    goto('/spots')
   }
 
   $: sessionDates = sessions.map(s => s.date).filter(Boolean)
@@ -819,7 +806,7 @@
         aria-label="Prep checklist"
       >
         {#if done === checklistItems.length}
-          <CheckCircle size={15} strokeWidth={1.5} />
+          <Check size={15} strokeWidth={1.5} />
           <span class="btn-checklist-label">Checklist completed</span>
         {:else}
           <ClipboardList size={15} strokeWidth={1.5} />
