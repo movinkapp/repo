@@ -11,8 +11,29 @@ export function formatDate(date) {
   return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
+export const currencySymbols = {
+  EUR: '€', GBP: '£', USD: '$', BRL: 'R$',
+  AUD: 'A$', JPY: '¥', CHF: 'CHF', CAD: 'CA$'
+}
+
 export function formatDeal(spot) {
+  const symbol = currencySymbols[spot.currency] || spot.currency
   return spot.deal_type === 'flat_daily'
-    ? spot.deal_value + ' ' + spot.currency + '/day'
-    : spot.deal_value + '% commission'
+    ? 'Studio · ' + symbol + formatAmount(spot.deal_value, spot.currency) + '/day'
+    : 'Commission · ' + spot.deal_value + '%'
+}
+
+export function formatAmount(value, currency = 'EUR') {
+  const num = Number(value) || 0
+  const locales = {
+    EUR: 'de-DE', GBP: 'en-GB', USD: 'en-US',
+    BRL: 'pt-BR', AUD: 'en-AU', JPY: 'ja-JP',
+    CHF: 'de-CH', CAD: 'en-CA'
+  }
+  const locale = locales[currency] || 'en-US'
+  const decimals = ['JPY', 'BRL'].includes(currency) ? 0 : 0
+  return new Intl.NumberFormat(locale, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  }).format(num)
 }

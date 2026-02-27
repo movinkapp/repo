@@ -7,22 +7,33 @@
   let spots = []
   let loading = true
 
+  $: activeSpots = spots.filter(s => getStatus(s) !== 'completed')
+  $: pastSpots = spots.filter(s => getStatus(s) === 'completed')
 
   function getStatusLabel(status) {
-    const labels = {
-      upcoming: 'Upcoming',
-      active: 'Active',
-      completed: 'Done'
-    }
+    const labels = { upcoming: 'Upcoming', active: 'Active', completed: 'Done' }
     return labels[status] || status
   }
 
+  function daysChip(spot) {
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    if (getStatus(spot) === 'upcoming') {
+      const diff = Math.ceil((new Date(spot.start_date) - now) / 86400000)
+      return 'in ' + diff + 'd'
+    }
+    if (getStatus(spot) === 'active') {
+      const diff = Math.ceil((new Date(spot.end_date) - now) / 86400000)
+      return diff + 'd left'
+    }
+    return null
+  }
 
   onMount(async () => {
     const { data, error } = await supabase
       .from('spots')
       .select('*')
-      .order('start_date', { ascending: false })
+      .order('start_date', { ascending: true })
 
     if (!error) spots = data
     loading = false
@@ -47,7 +58,14 @@
     </div>
   {:else}
     <div class="list">
-      {#each spots as spot}
+      {#if activeSpots.length === 0}
+        <div class="empty-active">
+          <p class="empty-active-text">No upcoming spots planned.</p>
+          <a href="/spots/new" class="empty-active-cta">Plan one →</a>
+        </div>
+      {/if}
+
+      {#each activeSpots as spot}
         <a href="/spots/{spot.id}" class="card">
           <div class="card-top">
             <div class="card-info">
@@ -57,9 +75,16 @@
                 {spot.city}, {spot.country}
               </p>
             </div>
-            <span class="badge badge-{getStatus(spot)}">
-              {getStatusLabel(getStatus(spot))}
-            </span>
+            <div class="card-right">
+              <span class="badge badge-{getStatus(spot)}">
+                {getStatusLabel(getStatus(spot))}
+              </span>
+              {#if getStatus(spot) === 'upcoming'}
+                <span class="days-chip">in {Math.ceil((new Date(spot.start_date) - new Date()) / 86400000)} d</span>
+              {:else if getStatus(spot) === 'active'}
+                <span class="days-chip">{Math.ceil((new Date(spot.end_date) - new Date()) / 86400000)} d left</span>
+              {/if}
+            </div>
           </div>
           <div class="card-bottom">
             <p class="dates">
@@ -70,15 +95,38 @@
           </div>
         </a>
       {/each}
+
+      {#if pastSpots.length > 0}
+        <div class="past-divider">
+          <p class="past-label">Past</p>
+        </div>
+        {#each pastSpots as spot}
+          <a href="/spots/{spot.id}" class="card past">
+            <div class="card-top">
+              <div class="card-info">
+                <h2>{spot.studio_name}</h2>
+                <p class="location">
+                  <MapPin size={12} strokeWidth={1.5} />
+                  {spot.city}, {spot.country}
+                </p>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <p class="dates">
+                <Calendar size={12} strokeWidth={1.5} />
+                {formatDate(spot.start_date)} → {formatDate(spot.end_date)}
+              </p>
+              <p class="deal">{formatDeal(spot)}</p>
+            </div>
+          </a>
+        {/each}
+      {/if}
     </div>
   {/if}
-
 </div>
 
 <style>
-  .page {
-    padding: 56px 24px 100px;
-  }
+  .page { padding: 56px 24px 100px; }
 
   .header {
     display: flex;
@@ -119,6 +167,24 @@
     color: var(--text-2);
   }
 
+  .empty-active {
+    padding: 24px 0 8px;
+    text-align: center;
+  }
+
+  .empty-active-text {
+    font-size: 14px;
+    color: var(--text-3);
+    margin-bottom: 8px;
+  }
+
+  .empty-active-cta {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+    text-decoration: none;
+  }
+
   .list {
     display: flex;
     flex-direction: column;
@@ -136,9 +202,7 @@
     transition: border-color 0.2s;
   }
 
-  .card:active {
-    border-color: var(--text-3);
-  }
+  .card:active { border-color: var(--text-3); }
 
   .card-top {
     display: flex;
@@ -162,6 +226,14 @@
     color: var(--text-2);
   }
 
+  .card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
   .badge {
     font-size: 11px;
     font-weight: 600;
@@ -172,19 +244,15 @@
     white-space: nowrap;
   }
 
-  .badge-upcoming {
-    background: var(--surface-2);
-    color: var(--text-2);
-  }
+  .badge-upcoming { background: var(--surface-2); color: var(--text-2); }
+  .badge-active { background: var(--active); color: #000; }
+  .badge-completed { background: var(--surface-2); color: var(--completed); }
 
-  .badge-active {
-    background: var(--active);
-    color: #000;
-  }
-
-  .badge-completed {
-    background: var(--surface-2);
-    color: var(--completed);
+  .days-chip {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    letter-spacing: 0.3px;
   }
 
   .card-bottom {
@@ -223,7 +291,31 @@
     transition: border-color 0.2s;
   }
 
-  .btn-new:active {
-    border-color: var(--text-3);
+  .btn-new:active { border-color: var(--text-3); }
+
+  .past-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0;
   }
+
+  .past-divider::before,
+  .past-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .past-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    white-space: nowrap;
+  }
+
+  .card.past { opacity: 0.5; }
 </style>

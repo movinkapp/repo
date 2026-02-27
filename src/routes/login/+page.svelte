@@ -2,6 +2,7 @@
   import { supabase } from '$lib/supabase.js'
   import { goto } from '$app/navigation'
   import { fade } from 'svelte/transition'
+  import { toast } from '$lib/toast.js'
 
   let email = ''
   let password = ''
@@ -16,16 +17,22 @@
 
     if (mode === 'login') {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password })
-      if (err) { error = err.message } else { goto('/') }
+      if (err) {
+        error = err.message
+        toast(err.message, 'error')
+      } else {
+        goto('/')
+      }
     } else {
       const { error: err } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { name } }
       })
-      if (err) { 
-        error = err.message 
-      } else { 
+      if (err) {
+        error = err.message
+        toast(err.message, 'error')
+      } else {
         if (mode === 'register') {
           goto('/onboarding')
         } else {

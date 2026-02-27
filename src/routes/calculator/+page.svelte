@@ -1,4 +1,8 @@
 <script>
+  import { page } from '$app/stores'
+  import { onMount } from 'svelte'
+  import { formatAmount } from '$lib/utils.js'
+
   let deal_type = 'percentage'
   let deal_value = ''
   let avg_session = ''
@@ -7,6 +11,13 @@
   let other = ''
 
   let num_days = ''
+
+  onMount(() => {
+    const params = $page.url.searchParams
+    if (params.get('deal_type')) deal_type = params.get('deal_type')
+    if (params.get('deal_value')) deal_value = params.get('deal_value')
+    if (params.get('currency')) currency = params.get('currency')
+  })
 
   let currency = 'EUR'
   const currencySymbols = { EUR: '€', GBP: '£', USD: '$', BRL: 'R$', AUD: 'A$', JPY: '¥', CHF: 'CHF', CAD: 'CA$' }
@@ -119,13 +130,13 @@
       <div class="result-row">
         <div class="result-item">
           <p class="result-label">You keep per tattoo</p>
-          <p class="result-big">{artistKeeps.toFixed(0)}<span class="result-unit">{symbol}</span></p>
+          <p class="result-big">{formatAmount(artistKeeps, currency)}<span class="result-unit">{symbol}</span></p>
         </div>
         {#if totalCosts > 0}
           <div class="result-divider"></div>
           <div class="result-item">
             <p class="result-label">Total costs</p>
-            <p class="result-mid">{totalCosts}{symbol}</p>
+            <p class="result-mid">{formatAmount(totalCosts, currency)}{symbol}</p>
           </div>
         {/if}
       </div>
@@ -146,7 +157,7 @@
           <div class="proj-row {p.viable ? 'viable' : 'loss'}">
             <span class="proj-dot"></span>
             <p class="proj-label">{p.sessions} {p.sessions === 1 ? 'tattoo' : 'tattoos'}</p>
-            <p class="proj-net">{p.net >= 0 ? '+' : ''}{p.net.toFixed(0)}{symbol}</p>
+            <p class="proj-net">{p.net >= 0 ? '+' : ''}{formatAmount(p.net, currency)}{symbol}</p>
           </div>
         {/each}
       </div>

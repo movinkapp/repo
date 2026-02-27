@@ -2,9 +2,11 @@
   import { supabase } from '$lib/supabase.js'
   import { onMount } from 'svelte'
   import { page } from '$app/stores'
-  import { ChevronLeft, Plus, MapPin, X } from 'lucide-svelte'
-  import { formatDate, formatDeal } from '$lib/utils.js'
-  import { DateInput } from 'date-picker-svelte'
+  import { goto } from '$app/navigation'
+  import { ChevronLeft, Plus, MapPin, X, Trash2, Pencil } from 'lucide-svelte'
+  import { formatDate, formatDeal, formatAmount } from '$lib/utils.js'
+  import { toast } from '$lib/toast.js'
+  import CalendarPicker from '$lib/components/CalendarPicker.svelte'
 
   let spot = null
   let sessions = []
@@ -13,6 +15,7 @@
   let showSessionForm = false
   let showCostForm = false
 
+  // add session fields
   let date = null
   let status = 'confirmed'
   let session_type = 'full_day'
@@ -22,12 +25,37 @@
   let payment_method = 'cash'
   let notes = ''
 
+  // add cost fields
   let cost_type = 'flight'
   let cost_amount = ''
   let cost_date = null
   let cost_notes = ''
   let sessionError = ''
   let costError = ''
+
+  // edit state
+  let editingSessionId = null
+  let editingCostId = null
+  let confirmDeleteSessionId = null
+  let confirmDeleteCostId = null
+
+  // edit session fields
+  let edit_date = null
+  let edit_status = 'confirmed'
+  let edit_session_type = 'full_day'
+  let edit_value = ''
+  let edit_deposit_received = false
+  let edit_deposit_value = ''
+  let edit_payment_method = 'cash'
+  let edit_notes = ''
+  let editSessionError = ''
+
+  // edit cost fields
+  let edit_cost_type = 'flight'
+  let edit_cost_amount = ''
+  let edit_cost_date = null
+  let edit_cost_notes = ''
+  let editCostError = ''
 
   onMount(async () => {
     const id = $page.params.id
@@ -58,10 +86,15 @@
     return str.charAt(0).toUpperCase() + str.slice(1)
   }
 
+  function toLocalDateStr(d) {
+    if (!d) return null
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+
   async function addSession() {
     const { error } = await supabase.from('sessions').insert({
       spot_id: $page.params.id,
-      date: date ? date.toISOString().split('T')[0] : null,
+      date: date ? toLocalDateStr(date) : null,
       status, session_type,
       value: value || null,
       deposit_received,
@@ -71,6 +104,7 @@
 
     if (error) {
       sessionError = 'Could not save session. Try again.'
+      toast('Could not save session. Try again.', 'error')
       return
     }
 
@@ -80,6 +114,7 @@
       .eq('spot_id', $page.params.id)
       .order('date', { ascending: true })
     sessions = data
+    toast('Session saved')
     showSessionForm = false
     date = null; value = ''; deposit_value = ''; notes = ''
     deposit_received = false
@@ -90,12 +125,13 @@
       spot_id: $page.params.id,
       type: cost_type,
       amount: cost_amount,
-      date: cost_date ? cost_date.toISOString().split('T')[0] : null,
+      date: cost_date ? toLocalDateStr(cost_date) : null,
       notes: cost_notes
     })
 
     if (error) {
       costError = 'Could not save cost. Try again.'
+      toast('Could not save cost. Try again.', 'error')
       return
     }
 
@@ -105,10 +141,122 @@
       .eq('spot_id', $page.params.id)
       .order('date', { ascending: true })
     costs = data
+    toast('Cost saved')
     showCostForm = false
     cost_amount = ''; cost_date = null; cost_notes = ''
   }
 
+  function startEditSession(session) {
+    editingSessionId = session.id
+    editingCostId = null
+    edit_date = session.date ? new Date(session.date + 'T12:00:00') : null
+    edit_status = session.status
+    edit_session_type = session.session_type
+    edit_value = session.value || ''
+    edit_deposit_received = session.deposit_received || false
+    edit_deposit_value = session.deposit_value || ''
+    edit_payment_method = session.payment_method
+    edit_notes = session.notes || ''
+    editSessionError = ''
+  }
+
+  function cancelEditSession() {
+    editingSessionId = null
+    editSessionError = ''
+  }
+
+  async function saveEditSession(id) {
+    const { error } = await supabase.from('sessions').update({
+      date: edit_date ? toLocalDateStr(edit_date) : null,
+      status: edit_status,
+      session_type: edit_session_type,
+      value: edit_value || null,
+      deposit_received: edit_deposit_received,
+      deposit_value: edit_deposit_value || null,
+      payment_method: edit_payment_method,
+      notes: edit_notes
+    }).eq('id', id)
+
+    if (error) {
+      editSessionError = 'Could not update session. Try again.'
+      toast('Could not update session. Try again.', 'error')
+      return
+    }
+
+    const { data } = await supabase
+      .from('sessions').select('*')
+      .eq('spot_id', $page.params.id)
+      .order('date', { ascending: true })
+    sessions = data
+    editingSessionId = null
+    toast('Session updated')
+  }
+
+  async function deleteSession(id) {
+    if (confirmDeleteSessionId !== id) {
+      confirmDeleteSessionId = id
+      return
+    }
+    confirmDeleteSessionId = null
+    const { error } = await supabase.from('sessions').delete().eq('id', id)
+    if (error) { toast('Could not delete session. Try again.', 'error'); return }
+    sessions = sessions.filter(s => s.id !== id)
+    toast('Session deleted')
+  }
+
+  function startEditCost(cost) {
+    editingCostId = cost.id
+    editingSessionId = null
+    edit_cost_type = cost.type
+    edit_cost_amount = cost.amount
+    edit_cost_date = cost.date ? new Date(cost.date + 'T12:00:00') : null
+    edit_cost_notes = cost.notes || ''
+    editCostError = ''
+  }
+
+  function cancelEditCost() {
+    editingCostId = null
+    editCostError = ''
+  }
+
+  async function saveEditCost(id) {
+    const { error } = await supabase.from('costs').update({
+      type: edit_cost_type,
+      amount: edit_cost_amount,
+      date: edit_cost_date ? toLocalDateStr(edit_cost_date) : null,
+      notes: edit_cost_notes
+    }).eq('id', id)
+
+    if (error) {
+      editCostError = 'Could not update cost. Try again.'
+      toast('Could not update cost. Try again.', 'error')
+      return
+    }
+
+    const { data } = await supabase
+      .from('costs').select('*')
+      .eq('spot_id', $page.params.id)
+      .order('date', { ascending: true })
+    costs = data
+    editingCostId = null
+    toast('Cost updated')
+  }
+
+  async function deleteCost(id) {
+    if (confirmDeleteCostId !== id) {
+      confirmDeleteCostId = id
+      return
+    }
+    confirmDeleteCostId = null
+    const { error } = await supabase.from('costs').delete().eq('id', id)
+    if (error) { toast('Could not delete cost. Try again.', 'error'); return }
+    costs = costs.filter(c => c.id !== id)
+    toast('Cost deleted')
+  }
+
+  $: sessionDates = sessions.map(s => s.date).filter(Boolean)
+  $: isDateLogged = (d) => d && sessionDates.includes(toLocalDateStr(d))
+  $: isOutsideSpot = (d) => d && spot && (toLocalDateStr(d) < spot.start_date || toLocalDateStr(d) > spot.end_date)
   $: totalArtist = sessions.reduce((sum, s) => sum + calcArtist(s), 0)
   $: totalCosts = costs.reduce((sum, c) => sum + Number(c.amount), 0)
   $: netProfit = totalArtist - totalCosts
@@ -144,18 +292,18 @@
     <div class="summary-top">
       <div class="summary-item">
         <p class="summary-label">GROSS EARNINGS</p>
-        <p class="summary-value-sm">{totalArtist.toFixed(0)} <span class="currency">{spot.currency}</span></p>
+        <p class="summary-value-sm">{formatAmount(totalArtist, spot.currency)} <span class="currency">{spot.currency}</span></p>
       </div>
       <div class="summary-item">
         <p class="summary-label">TRIP COSTS</p>
-        <p class="summary-value-sm">{totalCosts.toFixed(0)} <span class="currency">{spot.currency}</span></p>
+        <p class="summary-value-sm">{formatAmount(totalCosts, spot.currency)} <span class="currency">{spot.currency}</span></p>
       </div>
     </div>
     <div class="summary-divider-h"></div>
     <div class="summary-net">
       <p class="summary-label">Net profit</p>
       <p class="summary-value-lg {netProfit >= 0 ? 'positive' : 'negative'}">
-        {netProfit.toFixed(0)} <span class="currency">{spot.currency}</span>
+        {formatAmount(netProfit, spot.currency)} <span class="currency">{spot.currency}</span>
       </p>
     </div>
   </div>
@@ -173,8 +321,17 @@
       <div class="form-card">
         <div class="form-col">
           <div class="field">
-            <label for="s-date">Date</label>
-            <DateInput id="s-date" bind:value={date} format="dd/MM/yyyy" closeOnSelection={true} placeholder="DD/MM/AAAA" />
+            <label for="cal-session-date">Date</label>
+            <CalendarPicker
+              id="cal-session-date"
+              bind:value={date}
+              spotStart={spot.start_date}
+              spotEnd={spot.end_date}
+              markedDates={sessionDates}
+            />
+            {#if date && isDateLogged(date)}
+              <p class="date-warning">A session already exists for this date.</p>
+            {/if}
           </div>
           <div class="field">
             <label for="s-value">Session total ({spot.currency})</label>
@@ -192,10 +349,9 @@
 
         <div class="field">
           <p class="field-label">Booking status</p>
-          <div class="toggle three">
+          <div class="toggle">
             <button type="button" class:active={status === 'confirmed'} onclick={() => status = 'confirmed'}>Confirmed</button>
             <button type="button" class:active={status === 'walk_in'} onclick={() => status = 'walk_in'}>Walk-in</button>
-            <button type="button" class:active={status === 'cancelled'} onclick={() => status = 'cancelled'}>Cancelled</button>
           </div>
         </div>
 
@@ -231,19 +387,101 @@
       <p class="empty-text">No sessions recorded yet.</p>
     {:else}
       {#each sessions as session}
-        <div class="session-card">
-          <div class="session-top">
-            <p class="session-date">{formatDate(session.date)}</p>
-            <p class="session-net">+{calcArtist(session).toFixed(0)} {spot.currency}</p>
-          </div>
-          <div class="session-bottom">
-            <span class="tag">{session.session_type === 'full_day' ? 'Full day' : 'Half day'}</span>
-            <span class="tag">{session.payment_method}</span>
-            {#if session.value}
-              <span class="tag">Total: {session.value} {spot.currency}</span>
+        {#if editingSessionId === session.id}
+          <div class="form-card">
+            <div class="form-col">
+              <div class="field">
+                <label for="cal-edit-session-date">Date</label>
+                <CalendarPicker
+                  id="cal-edit-session-date"
+                  bind:value={edit_date}
+                  spotStart={spot.start_date}
+                  spotEnd={spot.end_date}
+                  markedDates={sessionDates}
+                />
+              </div>
+              <div class="field">
+                <label for="es-value">Session total ({spot.currency})</label>
+                <input id="es-value" bind:value={edit_value} type="number" placeholder="0" />
+              </div>
+            </div>
+
+            <div class="field">
+              <p class="field-label">Session type</p>
+              <div class="toggle">
+                <button type="button" class:active={edit_session_type === 'full_day'} onclick={() => edit_session_type = 'full_day'}>Full day</button>
+                <button type="button" class:active={edit_session_type === 'half_day'} onclick={() => edit_session_type = 'half_day'}>Half day</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <p class="field-label">Booking status</p>
+              <div class="toggle three">
+                <button type="button" class:active={edit_status === 'confirmed'} onclick={() => edit_status = 'confirmed'}>Confirmed</button>
+                <button type="button" class:active={edit_status === 'walk_in'} onclick={() => edit_status = 'walk_in'}>Walk-in</button>
+                <button type="button" class:active={edit_status === 'cancelled'} onclick={() => edit_status = 'cancelled'}>Cancelled</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <p class="field-label">Payment method</p>
+              <div class="toggle three">
+                <button type="button" class:active={edit_payment_method === 'cash'} onclick={() => edit_payment_method = 'cash'}>Cash</button>
+                <button type="button" class:active={edit_payment_method === 'transfer'} onclick={() => edit_payment_method = 'transfer'}>Transfer</button>
+                <button type="button" class:active={edit_payment_method === 'card'} onclick={() => edit_payment_method = 'card'}>Card</button>
+              </div>
+            </div>
+
+            <p class="hint">Deposit received?</p>
+            <div class="deposit-row">
+              <div class="toggle" style="max-width:260px;">
+                <button type="button" class:active={!edit_deposit_received} onclick={() => edit_deposit_received = false} aria-pressed={!edit_deposit_received}>No deposit</button>
+                <button type="button" class:active={edit_deposit_received} onclick={() => edit_deposit_received = true} aria-pressed={edit_deposit_received}>Deposit received</button>
+              </div>
+              {#if edit_deposit_received}
+                <input bind:value={edit_deposit_value} type="number" placeholder="Amount" class="deposit-input" aria-label="Deposit amount" />
+              {/if}
+            </div>
+
+            {#if editSessionError}
+              <p class="form-error">{editSessionError}</p>
             {/if}
+
+            <div class="edit-actions">
+              <button class="btn-cancel" onclick={cancelEditSession}>Cancel</button>
+              <button class="btn-primary" onclick={() => saveEditSession(session.id)}>Save changes</button>
+            </div>
           </div>
-        </div>
+        {:else}
+          <div class="session-card">
+            <div class="session-top">
+              <p class="session-date">{formatDate(session.date)}</p>
+              <p class="session-net">+{formatAmount(calcArtist(session), spot.currency)} {spot.currency}</p>
+            </div>
+            <div class="session-bottom">
+              <span class="tag">{session.session_type === 'full_day' ? 'Full day' : 'Half day'}</span>
+              <span class="tag">{session.payment_method}</span>
+              {#if session.value}
+                <span class="tag">Total: {formatAmount(session.value, spot.currency)} {spot.currency}</span>
+              {/if}
+              <div class="card-actions">
+                <button class="btn-icon" onclick={() => startEditSession(session)} aria-label="Edit session">
+                  <Pencil size={13} strokeWidth={1.5} />
+                </button>
+                {#if confirmDeleteSessionId === session.id}
+                  <button class="btn-confirm-delete" onclick={() => deleteSession(session.id)}>Delete?</button>
+                  <button class="btn-icon" onclick={() => confirmDeleteSessionId = null}>
+                    <X size={13} strokeWidth={2} />
+                  </button>
+                {:else}
+                  <button class="btn-icon btn-icon-danger" onclick={() => deleteSession(session.id)} aria-label="Delete session">
+                    <Trash2 size={13} strokeWidth={1.5} />
+                  </button>
+                {/if}
+              </div>
+            </div>
+          </div>
+        {/if}
       {/each}
     {/if}
   </div>
@@ -276,8 +514,14 @@
             <input id="c-amount" bind:value={cost_amount} type="number" placeholder="0" />
           </div>
           <div class="field">
-            <label for="c-date">Date <span class="optional">(optional)</span></label>
-            <DateInput id="c-date" bind:value={cost_date} format="dd/MM/yyyy" closeOnSelection={true} placeholder="DD/MM/AAAA" />
+            <label for="cal-cost-date">Date <span class="optional">(optional)</span></label>
+            <CalendarPicker
+              id="cal-cost-date"
+              bind:value={cost_date}
+              spotStart={spot.start_date}
+              spotEnd={spot.end_date}
+              markedDates={[]}
+            />
           </div>
         </div>
 
@@ -298,10 +542,77 @@
       <p class="empty-text">No costs logged yet.</p>
     {:else}
       {#each costs as cost}
-        <div class="cost-card">
-          <p class="cost-type">{capitalize(cost.type)}</p>
-          <p class="cost-amount">-{cost.amount} {spot.currency}</p>
-        </div>
+        {#if editingCostId === cost.id}
+          <div class="form-card">
+            <div class="field">
+              <p class="field-label">Cost category</p>
+              <div class="toggle four">
+                <button type="button" class:active={edit_cost_type === 'flight'} onclick={() => edit_cost_type = 'flight'}>Flight</button>
+                <button type="button" class:active={edit_cost_type === 'accommodation'} onclick={() => edit_cost_type = 'accommodation'}>Stay</button>
+                <button type="button" class:active={edit_cost_type === 'food'} onclick={() => edit_cost_type = 'food'}>Food</button>
+                <button type="button" class:active={edit_cost_type === 'other'} onclick={() => edit_cost_type = 'other'}>Other</button>
+              </div>
+            </div>
+
+            <div class="form-col">
+              <div class="field">
+                <label for="ec-amount">Amount ({spot.currency})</label>
+                <input id="ec-amount" bind:value={edit_cost_amount} type="number" placeholder="0" />
+              </div>
+              <div class="field">
+                <label for="cal-edit-cost-date">Date <span class="optional">(optional)</span></label>
+                <CalendarPicker
+                  id="cal-edit-cost-date"
+                  bind:value={edit_cost_date}
+                  spotStart={spot.start_date}
+                  spotEnd={spot.end_date}
+                  markedDates={[]}
+                />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="ec-notes">Notes</label>
+              <input id="ec-notes" bind:value={edit_cost_notes} type="text" placeholder="Optional" />
+            </div>
+
+            {#if editCostError}
+              <p class="form-error">{editCostError}</p>
+            {/if}
+
+            <div class="edit-actions">
+              <button class="btn-cancel" onclick={cancelEditCost}>Cancel</button>
+              <button class="btn-primary" onclick={() => saveEditCost(cost.id)}>Save changes</button>
+            </div>
+          </div>
+        {:else}
+          <div class="cost-card">
+            <div class="cost-left">
+              <p class="cost-type">{capitalize(cost.type)}</p>
+              {#if cost.date}
+                <p class="cost-date">{formatDate(cost.date)}</p>
+              {/if}
+            </div>
+            <div class="cost-right">
+              <p class="cost-amount">-{formatAmount(cost.amount, spot.currency)} {spot.currency}</p>
+              <div class="card-actions">
+                <button class="btn-icon" onclick={() => startEditCost(cost)} aria-label="Edit cost">
+                  <Pencil size={13} strokeWidth={1.5} />
+                </button>
+                {#if confirmDeleteCostId === cost.id}
+                  <button class="btn-confirm-delete" onclick={() => deleteCost(cost.id)}>Delete?</button>
+                  <button class="btn-icon" onclick={() => confirmDeleteCostId = null}>
+                    <X size={13} strokeWidth={2} />
+                  </button>
+                {:else}
+                  <button class="btn-icon btn-icon-danger" onclick={() => deleteCost(cost.id)} aria-label="Delete cost">
+                    <Trash2 size={13} strokeWidth={1.5} />
+                  </button>
+                {/if}
+              </div>
+            </div>
+          </div>
+        {/if}
       {/each}
     {/if}
   </div>
@@ -582,14 +893,33 @@
     align-items: flex-start;
   }
 
-  .deposit-row .toggle {
-    max-width: 260px;
-  }
+  .deposit-row .toggle { max-width: 260px; }
 
   .deposit-input {
     width: 140px;
     padding: 8px 10px;
   }
+
+  .edit-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 8px;
+  }
+
+  .btn-cancel {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-cancel:active { border-color: var(--text-3); color: var(--text); }
 
   .btn-primary {
     background: var(--text);
@@ -631,7 +961,12 @@
     color: var(--upcoming);
   }
 
-  .session-bottom { display: flex; gap: 6px; flex-wrap: wrap; }
+  .session-bottom {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
 
   .tag {
     font-size: 11px;
@@ -640,6 +975,27 @@
     padding: 3px 8px;
     border-radius: 4px;
   }
+
+  .card-actions {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .btn-icon {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+  }
+
+  .btn-icon:active { color: var(--text); }
+  .btn-icon-danger:active { color: var(--error); }
 
   .cost-card {
     background: var(--surface);
@@ -652,7 +1008,20 @@
     align-items: center;
   }
 
+  .cost-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .cost-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .cost-type { font-size: 14px; font-weight: 500; text-transform: capitalize; }
+  .cost-date { font-size: 12px; color: var(--text-3); }
 
   .cost-amount {
     font-family: var(--font-display);
@@ -667,76 +1036,24 @@
     padding: 0 2px;
   }
 
-  /* date-picker-svelte theme */
-  :global(.date-time-field input) {
-    background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius-sm) !important;
-    color: var(--text) !important;
-    font-family: var(--font-body) !important;
-    font-size: 15px !important;
-    padding: 12px 14px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    outline: none !important;
+  .date-warning {
+    font-size: 12px;
+    color: var(--error);
+    opacity: 0.8;
+    padding: 0 2px;
+  }
+  .btn-confirm-delete {
+    background: none;
+    border: none;
+    color: var(--error);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: opacity 0.2s;
   }
 
-  :global(.date-time-field input:focus) {
-    border-color: var(--text-2) !important;
-  }
-
-  :global(.picker) {
-    background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
-  }
-
-  :global(.picker .title button),
-  :global(.picker .title span) {
-    color: var(--text) !important;
-    font-family: var(--font-display) !important;
-    font-weight: 700 !important;
-  }
-
-  :global(.picker .day-of-week) {
-    color: var(--text-3) !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-  }
-
-  :global(.picker .day) {
-    color: var(--text) !important;
-    border-radius: var(--radius-sm) !important;
-    font-family: var(--font-body) !important;
-    font-size: 14px !important;
-  }
-
-  :global(.picker .day:hover) {
-    background: var(--surface-2) !important;
-  }
-
-  :global(.picker .day.selected) {
-    background: var(--text) !important;
-    color: var(--bg) !important;
-  }
-
-  :global(.picker .day.today) {
-    border: 1px solid var(--border) !important;
-  }
-
-  :global(.picker .day.disabled) {
-    color: var(--text-3) !important;
-    opacity: 0.4 !important;
-  }
-
-  :global(.picker button) {
-    color: var(--text-2) !important;
-  }
-
-  :global(.picker button:hover) {
-    color: var(--text) !important;
-  }
+  .btn-confirm-delete:active { opacity: 0.7; }
 </style>

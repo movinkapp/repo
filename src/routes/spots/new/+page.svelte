@@ -1,8 +1,9 @@
 <script>
   import { supabase } from '$lib/supabase.js'
   import { goto } from '$app/navigation'
+  import { toast } from '$lib/toast.js'
   import { ChevronLeft } from 'lucide-svelte'
-  import { DateInput } from 'date-picker-svelte'
+  import CalendarPicker from '$lib/components/CalendarPicker.svelte'
 
   let studio_name = ''
   let city = ''
@@ -17,6 +18,12 @@
   let error = ''
 
   const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD']
+
+  const currencySymbols = {
+    EUR: '€', GBP: '£', USD: '$', BRL: 'R$',
+    AUD: 'A$', JPY: '¥', CHF: 'CHF', CAD: 'CA$'
+  }
+  $: symbol = currencySymbols[currency] || currency
 
   async function getExchangeRate(currency) {
     if (currency === 'EUR') return 1.0
@@ -49,8 +56,8 @@
       studio_name,
       city,
       country,
-      start_date: start_date ? start_date.toISOString().split('T')[0] : null,
-      end_date: end_date ? end_date.toISOString().split('T')[0] : null,
+      start_date: start_date ? `${start_date.getFullYear()}-${String(start_date.getMonth() + 1).padStart(2, '0')}-${String(start_date.getDate()).padStart(2, '0')}` : null,
+      end_date: end_date ? `${end_date.getFullYear()}-${String(end_date.getMonth() + 1).padStart(2, '0')}-${String(end_date.getDate()).padStart(2, '0')}` : null,
       deal_type,
       deal_value,
       currency,
@@ -61,7 +68,9 @@
 
     if (err) {
       error = err.message
+      toast(err.message, 'error')
     } else {
+      toast('Spot created')
       goto('/spots')
     }
 
@@ -96,12 +105,12 @@
 
     <div class="col">
       <div class="field">
-        <label for="start_date">From</label>
-        <DateInput id="start_date" bind:value={start_date} format="dd/MM/yyyy" closeOnSelection={true} placeholder="DD/MM/AAAA" />
+        <p class="field-label">From</p>
+        <CalendarPicker bind:value={start_date} markedDates={[]} />
       </div>
       <div class="field">
-        <label for="end_date">To</label>
-        <DateInput id="end_date" bind:value={end_date} format="dd/MM/yyyy" closeOnSelection={true} placeholder="DD/MM/AAAA" />
+        <p class="field-label">To</p>
+        <CalendarPicker bind:value={end_date} markedDates={[]} />
       </div>
     </div>
 
@@ -130,7 +139,7 @@
           {deal_type === 'flat_daily' ? 'Daily rate' : 'Commission %'}
         </label>
         <input id="deal_value" bind:value={deal_value} type="number"
-          placeholder={deal_type === 'flat_daily' ? '200' : '30'} />
+          placeholder={deal_type === 'flat_daily' ? symbol + '0' : '30'} />
       </div>
       <div class="field">
         <label for="currency">Currency</label>
@@ -274,6 +283,14 @@
     line-height: 1.5;
   }
 
+  .field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-3);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
   .btn-primary {
     background: var(--text);
     color: var(--bg);
@@ -332,76 +349,4 @@
     color: var(--bg);
   }
 
-  /* date-picker-svelte theme */
-  :global(.date-time-field input) {
-    background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius-sm) !important;
-    color: var(--text) !important;
-    font-family: var(--font-body) !important;
-    font-size: 15px !important;
-    padding: 12px 14px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    outline: none !important;
-  }
-
-  :global(.date-time-field input:focus) {
-    border-color: var(--text-2) !important;
-  }
-
-  :global(.picker) {
-    background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
-  }
-
-  :global(.picker .title button),
-  :global(.picker .title span) {
-    color: var(--text) !important;
-    font-family: var(--font-display) !important;
-    font-weight: 700 !important;
-  }
-
-  :global(.picker .day-of-week) {
-    color: var(--text-3) !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-  }
-
-  :global(.picker .day) {
-    color: var(--text) !important;
-    border-radius: var(--radius-sm) !important;
-    font-family: var(--font-body) !important;
-    font-size: 14px !important;
-  }
-
-  :global(.picker .day:hover) {
-    background: var(--surface-2) !important;
-  }
-
-  :global(.picker .day.selected) {
-    background: var(--text) !important;
-    color: var(--bg) !important;
-  }
-
-  :global(.picker .day.today) {
-    border: 1px solid var(--border) !important;
-  }
-
-  :global(.picker .day.disabled) {
-    color: var(--text-3) !important;
-    opacity: 0.4 !important;
-  }
-
-  :global(.picker button) {
-    color: var(--text-2) !important;
-  }
-
-  :global(.picker button:hover) {
-    color: var(--text) !important;
-  }
 </style>

@@ -6,6 +6,7 @@
   import { fade } from 'svelte/transition'
   import { navigating, page } from '$app/stores'
   import { Home, MapPin, Calculator, User } from 'lucide-svelte'
+  import Toast from '$lib/components/Toast.svelte'
 
   let authChecked = false
 
@@ -49,6 +50,7 @@
   {#key $navigating?.to?.url.pathname}
     <div in:fade={{ duration: 150, delay: 50 }}>
       <slot />
+      <Toast />
     </div>
   {/key}
 
