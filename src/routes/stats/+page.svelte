@@ -2,7 +2,7 @@
   import { supabase } from '$lib/supabase.js'
   import { onMount } from 'svelte'
   import { ChevronLeft } from 'lucide-svelte'
-  import { formatAmount } from '$lib/utils.js'
+  import { formatAmount, getStatus } from '$lib/utils.js'
 
   let spots = []
   let sessions = []
@@ -19,16 +19,23 @@
   ])].sort((a, b) => b - a)
 
   $: yearSpots = spots.filter(s =>
-    new Date(s.start_date).getFullYear() === selectedYear
+    new Date(s.start_date).getFullYear() === selectedYear &&
+    getStatus(s) === 'completed'
   )
 
-  $: yearSessions = sessions.filter(s =>
-    s.date && new Date(s.date).getFullYear() === selectedYear
-  )
+  $: yearSessions = sessions.filter(s => {
+    if (!s.date) return false
+    if (new Date(s.date).getFullYear() !== selectedYear) return false
+    const spot = spots.find(sp => sp.id === s.spot_id)
+    return spot && getStatus(spot) === 'completed'
+  })
 
-  $: yearCosts = costs.filter(c =>
-    c.date && new Date(c.date).getFullYear() === selectedYear
-  )
+  $: yearCosts = costs.filter(c => {
+    if (!c.date) return false
+    if (new Date(c.date).getFullYear() !== selectedYear) return false
+    const spot = spots.find(sp => sp.id === c.spot_id)
+    return spot && getStatus(spot) === 'completed'
+  })
 
   $: totalCountries = new Set(yearSpots.map(s => s.country)).size
 
