@@ -4,7 +4,7 @@
   import { fade } from 'svelte/transition'
   import { page } from '$app/stores'
   import { goto } from '$app/navigation'
-  import { ChevronLeft, Plus, MapPin, X, Trash2, Pencil, Settings2 } from 'lucide-svelte'
+  import { ChevronLeft, Plus, MapPin, X, Trash2, Pencil, Settings2, ClipboardList, CheckCircle } from 'lucide-svelte'
   import { formatDate, formatDeal, formatAmount } from '$lib/utils.js'
   import { toast, toastConfirm } from '$lib/toast.js'
   import CalendarPicker from '$lib/components/CalendarPicker.svelte'
@@ -16,6 +16,8 @@
   let showSessionForm = false
   let showCostForm = false
   let userBaseCurrency = 'EUR'
+
+  let showChecklist = false
 
   let editingSpot = false
   let edit_studio_name = ''
@@ -32,6 +34,29 @@
   let savingSpot = false
 
   const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
+
+  const checklistItems = [
+    { key: 'check_flight',          label: 'Flight booked',               group: 'Travel' },
+    { key: 'check_accommodation',   label: 'Accommodation reserved',      group: 'Travel' },
+    { key: 'check_studio_address',  label: 'Studio address saved',        group: 'Travel' },
+    { key: 'check_clients_notified',label: 'Clients notified of address', group: 'Clients' },
+    { key: 'check_deposits',        label: 'Deposits received',           group: 'Clients' },
+    { key: 'check_gear',            label: 'Gear packed',                 group: 'Material' },
+    { key: 'check_contract',        label: 'Deal confirmed with studio',  group: 'Admin' },
+  ]
+
+  $: groups = [...new Set(checklistItems.map(i => i.group))]
+
+  // Ensure checklist fields exist on spot (avoid runtime errors if DB missing columns)
+  async function initChecklistDefaults() {
+    if (!spot) return
+    const missing = {}
+    checklistItems.forEach(i => {
+      if (spot[i.key] === undefined) missing[i.key] = false
+    })
+    if (Object.keys(missing).length === 0) return
+    spot = { ...spot, ...missing }
+  }
 
   // add session fields
   let date = null
@@ -86,6 +111,8 @@
       .from('costs').select('*').eq('spot_id', id).order('date', { ascending: true })
 
     spot = spotData
+    // ensure checklist boolean columns exist and are set to false if missing
+    await initChecklistDefaults()
     sessions = sessionsData || []
     costs = costsData || []
     // fetch user's profile to get base currency
@@ -323,6 +350,22 @@
     toast('Spot updated')
   }
 
+  async function toggleChecklistItem(key) {
+    if (!spot) return
+    const oldValue = !!spot[key]
+    const newValue = !oldValue
+    if (!spot) return
+    const itemLabel = checklistItems.find(i => i.key === key)?.label || key
+    // optimistic update
+    spot = { ...spot, [key]: newValue }
+    const { error } = await supabase.from('spots').update({ [key]: newValue }).eq('id', spot.id)
+    if (error) {
+      // revert
+      spot = { ...spot, [key]: oldValue }
+      toast('Could not save checklist change. Try again.', 'error')
+    }
+  }
+
   async function deleteSpot() {
     toastConfirm('Delete this entire spot?', async () => {
       const { error } = await supabase.from('spots').delete().eq('id', spot.id)
@@ -337,6 +380,8 @@
   $: totalArtist = sessions.reduce((sum, s) => sum + calcArtist(s), 0)
   $: totalCosts = costs.reduce((sum, c) => sum + Number(c.amount), 0)
   $: netProfit = totalArtist - totalCosts
+  $: done = spot ? checklistItems.filter(i => spot[i.key]).length : 0
+  
 </script>
 
 {#if loading}
@@ -366,12 +411,21 @@
           {spot.city}, {spot.country}
         </p>
         <span class="deal-tag">{formatDeal(spot)}</span>
+        {#if done > 0}
+          <span class="checklist-tag {done === checklistItems.length ? 'checklist-done' : ''}">
+            ✓ {done}/{checklistItems.length}
+          </span>
+        {/if}
       </div>
       {#if spot.notes}
         <p class="spot-notes">{spot.notes}</p>
       {/if}
+
+      
     </div>
   </div>
+
+  
 
   {#if editingSpot}
     <div class="form-card" style="margin-bottom: 20px;" transition:fade={{ duration: 150 }}>
@@ -758,6 +812,42 @@
   </div>
 
   <div class="danger-zone">
+    <div style="margin-bottom:12px;">
+      <button
+        class="btn-checklist {done === checklistItems.length ? 'btn-checklist-complete' : ''}"
+        onclick={() => showChecklist = !showChecklist}
+        aria-label="Prep checklist"
+      >
+        {#if done === checklistItems.length}
+          <CheckCircle size={15} strokeWidth={1.5} />
+          <span class="btn-checklist-label">Checklist completed</span>
+        {:else}
+          <ClipboardList size={15} strokeWidth={1.5} />
+          <span class="btn-checklist-label">{showChecklist ? 'Close checklist' : 'Prep checklist'}</span>
+        {/if}
+      </button>
+    </div>
+    {#if showChecklist}
+      <div class="form-card" style="margin-bottom: 12px;">
+        {#each groups as group}
+          <div class="checklist-group">
+            <p class="checklist-group-label">{group}</p>
+            {#each checklistItems.filter(i => i.group === group) as item}
+              <button
+                type="button"
+                class="checklist-item {spot[item.key] ? 'checklist-item-done' : ''}"
+                onclick={() => toggleChecklistItem(item.key)}
+                aria-pressed={spot[item.key]}
+                onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleChecklistItem(item.key) } }}
+              >
+                <span class="checklist-box">{spot[item.key] ? '✓' : ''}</span>
+                <span class="checklist-label">{item.label}</span>
+              </button>
+            {/each}
+          </div>
+        {/each}
+      </div>
+    {/if}
     <button class="btn-delete-spot" onclick={deleteSpot}>
       Delete this spot
     </button>
@@ -1251,6 +1341,34 @@
 
   .btn-edit-spot:active { color: var(--text); }
 
+  .btn-checklist {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--text);
+    border: 1px solid var(--border);
+    color: var(--bg);
+    padding: 16px 18px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 15px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .btn-checklist:active { opacity: 0.95; }
+
+  .btn-checklist-complete {
+    background: var(--upcoming);
+    border-color: var(--upcoming);
+    color: var(--bg);
+  }
+  .btn-checklist-complete:active { opacity: 0.95; }
+
+  .btn-checklist-label { font-weight: 700; color: inherit; }
+
   .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1277,4 +1395,90 @@
   }
 
   select:focus { border-color: var(--text-2); outline: none; }
+
+  .checklist-tag {
+    font-size: 11px;
+    color: var(--text-3);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+    white-space: nowrap;
+  }
+
+  .checklist-tag.checklist-done {
+    color: var(--upcoming);
+    border-color: var(--upcoming);
+  }
+
+  .checklist-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .checklist-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-top: 4px;
+  }
+
+  .checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 11px 14px;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: all 0.15s;
+    font-family: var(--font-body);
+  }
+
+  .checklist-item-done {
+    border-color: var(--upcoming);
+    opacity: 0.6;
+  }
+
+  .checklist-box {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--upcoming);
+    flex-shrink: 0;
+  }
+
+  .checklist-item-done .checklist-box {
+    border-color: var(--upcoming);
+    background: var(--surface-2);
+  }
+
+  .checklist-label {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .checklist-item-done .checklist-label {
+    color: var(--text-3);
+    text-decoration: line-through;
+  }
+
+  .checklist-item:focus-visible {
+    outline: 3px solid var(--text-2);
+    outline-offset: 2px;
+  }
+
+  /* removed disabled styles to keep checklist interactive; completion is shown on the button */
 </style>
