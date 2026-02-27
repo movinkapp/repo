@@ -13,8 +13,8 @@
       {#if t.type === 'confirm'}
         <p class="toast-message">{t.message}</p>
           <div class="toast-actions">
-          <button class="toast-btn toast-btn-cancel" on:click={t.onCancel}>Cancel</button>
-          <button class="toast-btn toast-btn-confirm" on:click={t.onConfirm}>Delete</button>
+          <button class="toast-btn toast-btn-cancel" onclick={t.onCancel}>Cancel</button>
+          <button class="toast-btn toast-btn-confirm" onclick={t.onConfirm}>Delete</button>
         </div>
       {:else}
         {t.message}

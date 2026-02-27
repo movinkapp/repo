@@ -12,6 +12,8 @@
 
   let num_days = ''
 
+  const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
+
   onMount(() => {
     const params = $page.url.searchParams
     if (params.get('deal_type')) deal_type = params.get('deal_type')
@@ -76,10 +78,12 @@
 
       <div class="field">
         <p class="field-label">Currency</p>
-        <div class="toggle" style="grid-template-columns: 1fr 1fr 1fr;">
-          {#each ['EUR', 'GBP', 'USD'] as c}
-            <button type="button" class:active={currency === c} onclick={() => currency = c}>{c}</button>
-          {/each}
+        <div class="select-wrap">
+          <select bind:value={currency}>
+            {#each currencies as c}
+              <option value={c}>{c}</option>
+            {/each}
+          </select>
         </div>
       </div>
 
@@ -257,6 +261,33 @@
     color: var(--text-3);
     font-weight: 400;
     font-size: 16px;
+  }
+
+  .select-wrap {
+    position: relative;
+  }
+
+  .select-wrap select {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    padding: 11px 36px 11px 14px;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    transition: border-color 0.2s;
+  }
+
+  .select-wrap select:focus {
+    border-color: var(--text-2);
+    outline: none;
   }
 
   .unit {

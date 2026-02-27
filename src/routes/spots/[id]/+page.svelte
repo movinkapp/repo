@@ -14,6 +14,7 @@
   let loading = true
   let showSessionForm = false
   let showCostForm = false
+  let userBaseCurrency = 'EUR'
 
   // add session fields
   let date = null
@@ -70,6 +71,14 @@
     spot = spotData
     sessions = sessionsData || []
     costs = costsData || []
+    // fetch user's profile to get base currency
+    const { data: profileData } = await supabase
+      .from('users')
+      .select('base_currency')
+      .eq('id', (await supabase.auth.getUser()).data.user.id)
+      .single()
+
+    userBaseCurrency = profileData?.base_currency || 'EUR'
     loading = false
   })
 
@@ -95,6 +104,7 @@
       date: date ? toLocalDateStr(date) : null,
       status, session_type,
       value: value || null,
+      base_currency: userBaseCurrency,
       deposit_received,
       deposit_value: deposit_value || null,
       payment_method, notes

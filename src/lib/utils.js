@@ -16,7 +16,7 @@ export function formatDate(date) {
 
 export const currencySymbols = {
   EUR: '€', GBP: '£', USD: '$', BRL: 'R$',
-  AUD: 'A$', JPY: '¥', CHF: 'CHF', CAD: 'CA$'
+  AUD: 'A$', JPY: '¥', CHF: 'CHF', CAD: 'CA$', KRW: '₩'
 }
 
 export function formatDeal(spot) {
@@ -31,10 +31,11 @@ export function formatAmount(value, currency = 'EUR') {
   const locales = {
     EUR: 'de-DE', GBP: 'en-GB', USD: 'en-US',
     BRL: 'pt-BR', AUD: 'en-AU', JPY: 'ja-JP',
-    CHF: 'de-CH', CAD: 'en-CA'
+    CHF: 'de-CH', CAD: 'en-CA', KRW: 'ko-KR'
+
   }
   const locale = locales[currency] || 'en-US'
-  const decimals = ['JPY', 'BRL'].includes(currency) ? 0 : 0
+  const decimals = ['JPY', 'BRL', 'KRW'].includes(currency) ? 0 : 0
   return new Intl.NumberFormat(locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals

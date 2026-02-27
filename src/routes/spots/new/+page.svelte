@@ -18,7 +18,7 @@
   let loading = false
   let error = ''
 
-  const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD']
+  const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
 
   $: symbol = currencySymbols[currency] || currency
 

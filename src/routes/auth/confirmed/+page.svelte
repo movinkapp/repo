@@ -28,13 +28,55 @@
 </script>
 
 <style>
-  :root{--bg:#0f0f10;--card:#0f1112;--text:#ececec;--muted:#a6a6a6;--accent:#ff7a00}
-  main{min-height:70vh;display:flex;align-items:center;justify-content:center;padding:32px;color:var(--text);background:var(--bg)}
-  .card{max-width:680px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:28px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
-  h1{margin:0 0 8px;font-size:18px}
-  p{margin:0;color:var(--muted)}
-  .btn{display:inline-block;margin-top:16px;padding:10px 14px;background:var(--accent);color:#070707;border-radius:8px;text-decoration:none;font-weight:700;cursor:pointer}
-  pre{margin-top:12px;color:#ffb3a0;white-space:pre-wrap}
+  main {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+
+  .card {
+    max-width: 480px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--text-2);
+  }
+
+  .btn {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 10px 16px;
+    background: var(--text);
+    color: var(--bg);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  pre {
+    margin-top: 12px;
+    color: var(--error);
+    white-space: pre-wrap;
+    font-size: 12px;
+  }
 </style>
 
 <main>

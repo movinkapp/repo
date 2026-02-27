@@ -12,7 +12,7 @@
   let loading = true
   let modalOpen = false
 
-  const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD']
+  const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
 
   onMount(async () => {
     const { data: { user: u } } = await supabase.auth.getUser()
