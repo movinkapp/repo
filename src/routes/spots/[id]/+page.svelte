@@ -104,7 +104,6 @@
       date: date ? toLocalDateStr(date) : null,
       status, session_type,
       value: value || null,
-      base_currency: userBaseCurrency,
       deposit_received,
       deposit_value: deposit_value || null,
       payment_method, notes
@@ -256,6 +255,15 @@
     })
   }
 
+  async function deleteSpot() {
+    toastConfirm('Delete this entire spot?', async () => {
+      const { error } = await supabase.from('spots').delete().eq('id', spot.id)
+      if (error) { toast('Could not delete spot. Try again.', 'error'); return }
+      toast('Spot deleted')
+      goto('/spots')
+    })
+  }
+
   $: sessionDates = sessions.map(s => s.date).filter(Boolean)
   $: isDateLogged = (d) => d && sessionDates.includes(toLocalDateStr(d))
   $: totalArtist = sessions.reduce((sum, s) => sum + calcArtist(s), 0)
@@ -286,6 +294,9 @@
         </p>
         <span class="deal-tag">{formatDeal(spot)}</span>
       </div>
+      {#if spot.notes}
+        <p class="spot-notes">{spot.notes}</p>
+      {/if}
     </div>
   </div>
 
@@ -602,6 +613,12 @@
         {/if}
       {/each}
     {/if}
+  </div>
+
+  <div class="danger-zone">
+    <button class="btn-delete-spot" onclick={deleteSpot}>
+      Delete this spot
+    </button>
   </div>
 
 </div>
@@ -1036,5 +1053,39 @@
     color: var(--error);
     opacity: 0.8;
     padding: 0 2px;
+  }
+
+  .spot-notes {
+    font-size: 13px;
+    color: var(--text-3);
+    line-height: 1.5;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .danger-zone {
+    margin-top: 8px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-delete-spot {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--error);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 12px 16px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+  }
+
+  .btn-delete-spot:active {
+    border-color: var(--error);
+    background: rgba(239, 68, 68, 0.06);
   }
 </style>

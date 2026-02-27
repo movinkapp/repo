@@ -1,8 +1,12 @@
 <script>
   import { supabase } from '$lib/supabase.js'
   import { goto } from '$app/navigation'
+  import { currencySymbols, fadeSlide } from '$lib/utils.js'
 
   let current = 0
+  let showCurrencyModal = false
+  let tempCurrency = 'EUR'
+  const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
 
   const slides = [
     {
@@ -57,8 +61,18 @@
     if (current < slides.length - 1) {
       current++
     } else {
-      finish()
+      showCurrencyModal = true
     }
+  }
+
+  async function saveCurrencyAndFinish() {
+    const { data: { user } } = await supabase.auth.getUser()
+    await supabase
+      .from('users')
+      .update({ base_currency: tempCurrency })
+      .eq('id', user.id)
+    showCurrencyModal = false
+    finish()
   }
 
   function skip() {
@@ -99,6 +113,32 @@
     </button>
   </div>
 </div>
+
+{#if showCurrencyModal}
+  <button
+    class="overlay"
+    onclick={() => saveCurrencyAndFinish()}
+    aria-label="Close modal"
+    transition:fadeSlide={{ duration: 200, y: 0 }}
+  ></button>
+  <div class="sheet" transition:fadeSlide={{ duration: 300, y: 40 }}>
+    <div class="sheet-handle"></div>
+    <p class="sheet-title">Your base currency</p>
+    <p class="sheet-hint">All your analytics will be shown in this currency. You can change it anytime in your profile.</p>
+    <div class="currency-grid">
+      {#each currencies as c}
+        <button
+          class="currency-btn"
+          class:active={tempCurrency === c}
+          onclick={() => tempCurrency = c}>
+          <span class="currency-symbol">{currencySymbols[c] || c}</span>
+          <span class="currency-code">{c}</span>
+        </button>
+      {/each}
+    </div>
+    <button class="btn-save" onclick={saveCurrencyAndFinish}>Let's go</button>
+  </div>
+{/if}
 
 <style>
   .page {
@@ -234,4 +274,106 @@
   .btn-primary:active {
     opacity: 0.8;
   }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .sheet {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    padding: 12px 24px 48px;
+    z-index: 50;
+  }
+
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    margin: 0 auto 20px;
+  }
+
+  .sheet-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .sheet-hint {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .currency-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .currency-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .currency-btn.active {
+    border-color: var(--text);
+    background: var(--bg);
+  }
+
+  .currency-symbol {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .currency-code {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-3);
+  }
+
+  .btn-save {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 15px;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.2s;
+  }
+
+  .btn-save:active { opacity: 0.8; }
 </style>
