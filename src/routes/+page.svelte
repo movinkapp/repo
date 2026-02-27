@@ -68,7 +68,7 @@
     <div class="stats-grid">
       {#if nextSpotDays}
         <button class="stat-card {nextSpotDays.isActive ? 'stat-active' : 'stat-upcoming'}" onclick={handleNextSpotClick}>
-          <p class="stat-value">{nextSpotDays.value}</p>
+          <p class="stat-value {nextSpotDays.isActive ? 'stat-value-active' : 'stat-value-upcoming'}">{nextSpotDays.value}</p>
           <p class="stat-label">{nextSpotDays.label}</p>
           <p class="stat-sub">{nextSpotDays.spot.studio_name}</p>
         </button>
@@ -157,24 +157,29 @@
     grid-column: span 2;
   }
 
-  .stat-active {
-    border-color: var(--active);
-    cursor: pointer;
-    transition: opacity 0.2s;
-    font-family: inherit;
-    width: 100%;
-  }
 
-  .stat-active:active { opacity: 0.7; }
+  .stat-active {
+  border-color: var(--upcoming);
+  cursor: pointer;
+  transition: opacity 0.18s;
+  font-family: inherit;
+  width: 100%;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.stat-active:active { opacity: 0.7; }
+
 
   .stat-upcoming {
-    cursor: pointer;
-    transition: opacity 0.2s;
-    font-family: inherit;
-    width: 100%;
-  }
+  border-color: var(--active);
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-family: inherit;
+  width: 100%;
+  background: rgba(245, 158, 11, 0.04);
+}
 
-  .stat-upcoming:active { opacity: 0.7; }
+.stat-upcoming:active { opacity: 0.7; }
 
   .stat-empty {
     border-style: dashed;
@@ -189,6 +194,15 @@
     margin-bottom: 4px;
     color: var(--text);
   }
+
+  .stat-value-active {
+    color: var(--upcoming);
+  }
+
+  .stat-value-upcoming {
+    color: var(--active);
+  }
+
 
   .stat-label {
     font-size: 11px;

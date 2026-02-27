@@ -1,3 +1,6 @@
+import { cubicOut } from 'svelte/easing'
+import { crossfade } from 'svelte/transition'
+
 export function getStatus(spot) {
   const today = new Date()
   const start = new Date(spot.start_date)
@@ -37,3 +40,27 @@ export function formatAmount(value, currency = 'EUR') {
     maximumFractionDigits: decimals
   }).format(num)
 }
+
+export function fadeSlide(node, { delay = 0, duration = 300, y = 8 } = {}) {
+  const style = getComputedStyle(node)
+  const targetOpacity = parseFloat(style.opacity) || 1
+  const transform = style.transform === 'none' ? '' : style.transform
+
+  return {
+    delay,
+    duration,
+    easing: cubicOut,
+    css: t => `transform: ${transform} translateY(${(1 - t) * y}px); opacity: ${t * targetOpacity};`
+  }
+}
+
+export const [send, receive] = crossfade({
+  duration: d => Math.max(200, d * 0.6),
+  fallback: (node) => {
+    return {
+      duration: 300,
+      easing: cubicOut,
+      css: t => `opacity: ${t}; transform: scale(${0.96 + 0.04 * t});`
+    }
+  }
+})

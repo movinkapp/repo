@@ -447,22 +447,22 @@
           <div class="session-card">
             <div class="session-top">
               <p class="session-date">{formatDate(session.date)}</p>
-              <p class="session-net">+{formatAmount(calcArtist(session), spot.currency)} {spot.currency}</p>
+              <p class="session-net">+{formatAmount(calcArtist(session), spot.currency)} <span class="session-currency">{spot.currency}</span></p>
             </div>
-            <div class="session-bottom">
-              <span class="tag">{session.session_type === 'full_day' ? 'Full day' : 'Half day'}</span>
-              <span class="tag">{session.payment_method}</span>
-              {#if session.value}
-                <span class="tag">Total: {formatAmount(session.value, spot.currency)} {spot.currency}</span>
-              {/if}
-              <div class="card-actions">
-                <button class="btn-icon" onclick={() => startEditSession(session)} aria-label="Edit session">
-                  <Pencil size={13} strokeWidth={1.5} />
-                </button>
-                <button class="btn-icon btn-icon-danger" onclick={() => deleteSession(session.id)} aria-label="Delete session">
-                  <Trash2 size={13} strokeWidth={1.5} />
-                </button>
-              </div>
+            <p class="session-meta">
+              {session.session_type === 'full_day' ? 'Full day' : 'Half day'} · {session.payment_method}
+              {#if session.value} · Total: {formatAmount(session.value, spot.currency)} {spot.currency}{/if}
+            </p>
+            {#if session.deposit_received && session.deposit_value}
+              <p class="session-deposit">Deposit: {formatAmount(session.deposit_value, spot.currency)} {spot.currency} already received</p>
+            {/if}
+            <div class="card-actions">
+              <button class="btn-icon" onclick={() => startEditSession(session)} aria-label="Edit session">
+                <Pencil size={13} strokeWidth={1.5} />
+              </button>
+              <button class="btn-icon btn-icon-danger" onclick={() => deleteSession(session.id)} aria-label="Delete session">
+                <Trash2 size={13} strokeWidth={1.5} />
+              </button>
             </div>
           </div>
         {/if}
@@ -920,43 +920,51 @@
     border-radius: var(--radius-sm);
     padding: 14px 16px;
     margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .session-top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
+    align-items: baseline;
   }
 
-  .session-date { font-size: 14px; font-weight: 600; }
+  .session-date {
+    font-size: 14px;
+    font-weight: 600;
+  }
 
   .session-net {
     font-family: var(--font-display);
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--upcoming);
+    letter-spacing: -0.5px;
   }
 
-  .session-bottom {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    align-items: center;
+  .session-currency {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-2);
   }
 
-  .tag {
-    font-size: 11px;
+  .session-meta {
+    font-size: 12px;
     color: var(--text-3);
-    background: var(--surface-2);
-    padding: 3px 8px;
-    border-radius: 4px;
+    text-transform: capitalize;
+  }
+
+  .session-deposit {
+    font-size: 12px;
+    color: var(--active);
   }
 
   .card-actions {
     display: flex;
     gap: 4px;
-    margin-left: auto;
+    margin-top: 2px;
   }
 
   .btn-icon {
