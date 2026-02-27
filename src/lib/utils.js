@@ -35,7 +35,7 @@ export function formatAmount(value, currency = 'EUR') {
 
   }
   const locale = locales[currency] || 'en-US'
-  const decimals = ['JPY', 'BRL', 'KRW'].includes(currency) ? 0 : 0
+  const decimals = 0
   return new Intl.NumberFormat(locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals

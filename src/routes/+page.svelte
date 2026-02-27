@@ -28,7 +28,7 @@
 
     const { data: sessionsData } = await supabase
       .from('sessions')
-      .select('id')
+      .select('id, spot_id')
 
     spots = spotsData || []
     sessions = sessionsData || []
@@ -87,8 +87,8 @@
       </div>
 
       <div class="stat-card wide">
-        <p class="stat-value">{sessions.length}</p>
-        <p class="stat-label">Sessions</p>
+        <p class="stat-value">{sessions.filter(s => spots.find(sp => sp.id === s.spot_id && (getStatus(sp) === 'active' || getStatus(sp) === 'upcoming'))).length}</p>
+        <p class="stat-label">Sessions ahead</p>
       </div>
     </div>
 

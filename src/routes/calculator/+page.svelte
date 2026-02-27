@@ -1,7 +1,9 @@
 <script>
   import { page } from '$app/stores'
+  import { supabase } from '$lib/supabase.js'
+  import { toast } from '$lib/toast.js'
   import { onMount } from 'svelte'
-  import { currencySymbols, formatAmount } from '$lib/utils.js'
+  import { currencySymbols, formatAmount, fadeSlide } from '$lib/utils.js'
 
   let deal_type = 'percentage'
   let deal_value = ''
@@ -12,9 +14,15 @@
 
   let num_days = ''
 
+  let simulations = []
+  let showSaveModal = false
+  let saveLabel = ''
+  let saving = false
+
   const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
 
-  onMount(() => {
+  onMount(async () => {
+    await loadSimulations()
     const params = $page.url.searchParams
     if (params.get('deal_type')) deal_type = params.get('deal_type')
     if (params.get('deal_value')) deal_value = params.get('deal_value')
@@ -38,6 +46,54 @@
     net: (artistKeeps * n) - totalCosts,
     viable: (artistKeeps * n) >= totalCosts
   }))
+
+  async function loadSimulations() {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data } = await supabase
+      .from('simulations')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    simulations = data || []
+  }
+
+  async function saveSimulation() {
+    if (!saveLabel.trim()) return
+    saving = true
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('simulations').insert({
+      user_id: user.id,
+      label: saveLabel.trim(),
+      deal_type,
+      deal_value: Number(deal_value),
+      avg_session: Number(avg_session),
+      currency,
+      num_days: Number(num_days) || null,
+      flight: Number(flight) || 0,
+      accommodation: Number(accommodation) || 0,
+      other: Number(other) || 0,
+      net_result: netProfit
+    })
+    if (error) {
+      toast('Could not save simulation.', 'error')
+    } else {
+      toast('Simulation saved')
+      saveLabel = ''
+      showSaveModal = false
+      await loadSimulations()
+    }
+    saving = false
+  }
+
+  async function deleteSimulation(id) {
+    const { error } = await supabase.from('simulations').delete().eq('id', id)
+    if (!error) {
+      simulations = simulations.filter(s => s.id !== id)
+      toast('Simulation deleted')
+    }
+  }
+
+  $: netProfit = (artistKeeps * (Number(num_days) || 0)) - totalCosts
 </script>
 
 <div class="page">
@@ -63,7 +119,21 @@
         <div class="field">
           <p class="field-label">{deal_type === 'percentage' ? 'Studio commission' : 'Daily rate'}</p>
           <div class="input-wrap">
-            <input type="number" bind:value={deal_value} placeholder="0" inputmode="numeric" />
+            <input
+              type="number"
+              bind:value={deal_value}
+              placeholder="0"
+              inputmode="numeric"
+              min="0"
+              max={deal_type === 'percentage' ? 100 : undefined}
+              oninput={() => {
+                if (deal_type === 'percentage') {
+                  const n = Number(deal_value)
+                  if (n > 100) deal_value = '100'
+                  if (n < 0) deal_value = '0'
+                }
+              }}
+            />
             <span class="unit">{deal_type === 'percentage' ? '%' : symbol}</span>
           </div>
         </div>
@@ -129,7 +199,7 @@
 
   <!-- RESULT — só aparece com dados -->
   {#if hasData}
-    <div class="result-card">
+    <div class="result-card" transition:fadeSlide={{ duration: 250, y: 16 }}>
       <div class="result-row">
         <div class="result-item">
           <p class="result-label">You keep per tattoo</p>
@@ -165,9 +235,63 @@
         {/each}
       </div>
     </div>
+
+    <div class="save-row">
+      <button class="btn-save-sim" onclick={() => showSaveModal = true}>
+        Save simulation
+      </button>
+    </div>
   {/if}
 
+  <div class="section">
+    <p class="section-label">Saved simulations</p>
+    {#if simulations.length === 0}
+      <p class="sim-empty">Run a calculation and save it to compare deals.</p>
+    {:else}
+    <div class="sim-list">
+      {#each simulations as sim}
+        <div class="sim-card">
+          <div class="sim-left">
+            <p class="sim-label">{sim.label}</p>
+            <p class="sim-meta">
+              {sim.deal_type === 'percentage' ? sim.deal_value + '%' : currencySymbols[sim.currency] + sim.deal_value + '/day'}
+              · {sim.currency}
+              {#if sim.num_days} · {sim.num_days}d{/if}
+            </p>
+          </div>
+          <div class="sim-right">
+            <p class="sim-net {sim.net_result >= 0 ? 'positive' : 'negative'}">
+              {sim.net_result >= 0 ? '+' : ''}{formatAmount(sim.net_result, sim.currency)}{currencySymbols[sim.currency] || sim.currency}
+            </p>
+            <button class="btn-sim-delete" onclick={() => deleteSimulation(sim.id)} aria-label="Delete">
+              ×
+            </button>
+          </div>
+        </div>
+      {/each}
+    </div>
+    {/if}
+  </div>
+
 </div>
+
+{#if showSaveModal}
+  <button class="overlay" onclick={() => showSaveModal = false} aria-label="Close" transition:fadeSlide={{ duration: 200, y: 0 }}></button>
+  <div class="sheet" transition:fadeSlide={{ duration: 300, y: 40 }}>
+    <div class="sheet-handle"></div>
+    <p class="sheet-title">Save simulation</p>
+    <p class="sheet-hint">Give it a name to find it later.</p>
+    <input
+      class="sheet-input"
+      bind:value={saveLabel}
+      placeholder="e.g. Tokyo Apr · Studio X"
+      type="text"
+    />
+    <button class="btn-primary-sheet" onclick={saveSimulation} disabled={saving || !saveLabel.trim()}>
+      {saving ? '···' : 'Save'}
+    </button>
+  </div>
+{/if}
 
 <style>
   .page {
@@ -453,4 +577,182 @@
 
   .viable .proj-net { color: var(--upcoming); }
   .loss .proj-net { color: var(--error); }
+  
+  .save-row {
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    margin-top: 16px;
+  }
+
+  .btn-save-sim {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+  }
+
+  .btn-save-sim:active { color: var(--text); border-color: var(--text-3); }
+
+  .sim-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sim-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .sim-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sim-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sim-meta {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .sim-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .sim-net {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .sim-net.positive { color: var(--upcoming); }
+  .sim-net.negative { color: var(--error); }
+
+  .btn-sim-delete {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 6px;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+
+  .btn-sim-delete:active { color: var(--error); }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .sheet {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    padding: 12px 24px 100px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    margin: 0 auto 8px;
+  }
+
+  .sheet-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .sheet-hint {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: -4px;
+  }
+
+  .sheet-input {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    padding: 12px 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .sheet-input:focus { border-color: var(--text-2); }
+  .sheet-input::placeholder { color: var(--text-3); }
+
+  .btn-primary-sheet {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.2s;
+  }
+
+  .btn-primary-sheet:active { opacity: 0.8; }
+  .btn-primary-sheet:disabled { opacity: 0.4; cursor: not-allowed; }
+  
+  .sim-empty {
+    font-size: 13px;
+    color: var(--text-3);
+    padding: 4px 2px;
+  }
 </style>

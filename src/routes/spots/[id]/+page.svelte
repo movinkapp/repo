@@ -1,9 +1,10 @@
 <script>
   import { supabase } from '$lib/supabase.js'
   import { onMount } from 'svelte'
+  import { fade } from 'svelte/transition'
   import { page } from '$app/stores'
   import { goto } from '$app/navigation'
-  import { ChevronLeft, Plus, MapPin, X, Trash2, Pencil } from 'lucide-svelte'
+  import { ChevronLeft, Plus, MapPin, X, Trash2, Pencil, Settings2 } from 'lucide-svelte'
   import { formatDate, formatDeal, formatAmount } from '$lib/utils.js'
   import { toast, toastConfirm } from '$lib/toast.js'
   import CalendarPicker from '$lib/components/CalendarPicker.svelte'
@@ -15,6 +16,22 @@
   let showSessionForm = false
   let showCostForm = false
   let userBaseCurrency = 'EUR'
+
+  let editingSpot = false
+  let edit_studio_name = ''
+  let edit_city = ''
+  let edit_country = ''
+  let edit_start_date = null
+  let edit_end_date = null
+  let edit_deal_type = 'flat_daily'
+  let edit_deal_value = ''
+  let edit_currency = 'EUR'
+  let edit_notes = ''
+  let edit_spot_notes = ''
+  let editSpotError = ''
+  let savingSpot = false
+
+  const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
 
   // add session fields
   let date = null
@@ -46,7 +63,7 @@
   let edit_deposit_received = false
   let edit_deposit_value = ''
   let edit_payment_method = 'cash'
-  let edit_notes = ''
+  let edit_session_notes = ''
   let editSessionError = ''
 
   // edit cost fields
@@ -163,7 +180,7 @@
     edit_deposit_received = session.deposit_received || false
     edit_deposit_value = session.deposit_value || ''
     edit_payment_method = session.payment_method
-    edit_notes = session.notes || ''
+    edit_session_notes = session.notes || ''
     editSessionError = ''
   }
 
@@ -181,7 +198,7 @@
       deposit_received: edit_deposit_received,
       deposit_value: edit_deposit_value || null,
       payment_method: edit_payment_method,
-      notes: edit_notes
+      notes: edit_session_notes
     }).eq('id', id)
 
     if (error) {
@@ -255,6 +272,57 @@
     })
   }
 
+  function startEditSpot() {
+    edit_studio_name = spot.studio_name
+    edit_city = spot.city
+    edit_country = spot.country
+    edit_start_date = spot.start_date ? new Date(spot.start_date + 'T12:00:00') : null
+    edit_end_date = spot.end_date ? new Date(spot.end_date + 'T12:00:00') : null
+    edit_deal_type = spot.deal_type
+    edit_deal_value = spot.deal_value
+    edit_currency = spot.currency
+    edit_spot_notes = spot.notes || ''
+    editSpotError = ''
+    editingSpot = true
+  }
+
+  function cancelEditSpot() {
+    editingSpot = false
+    editSpotError = ''
+  }
+
+  async function saveEditSpot() {
+    if (!edit_studio_name || !edit_city || !edit_country || !edit_start_date || !edit_end_date || !edit_deal_value) {
+      editSpotError = 'Please fill in all required fields.'
+      return
+    }
+    savingSpot = true
+    const { error } = await supabase.from('spots').update({
+      studio_name: edit_studio_name,
+      city: edit_city,
+      country: edit_country,
+      start_date: toLocalDateStr(edit_start_date),
+      end_date: toLocalDateStr(edit_end_date),
+      deal_type: edit_deal_type,
+      deal_value: edit_deal_value,
+      currency: edit_currency,
+      notes: edit_spot_notes
+    }).eq('id', spot.id)
+
+    if (error) {
+      editSpotError = 'Could not update spot. Try again.'
+      toast('Could not update spot. Try again.', 'error')
+      savingSpot = false
+      return
+    }
+
+    const { data } = await supabase.from('spots').select('*').eq('id', spot.id).single()
+    spot = data
+    editingSpot = false
+    savingSpot = false
+    toast('Spot updated')
+  }
+
   async function deleteSpot() {
     toastConfirm('Delete this entire spot?', async () => {
       const { error } = await supabase.from('spots').delete().eq('id', spot.id)
@@ -285,7 +353,12 @@
     <div class="header-info">
       <div class="header-top">
         <h1>{spot.studio_name}</h1>
-        <p class="header-date">{formatDate(spot.start_date)} → {formatDate(spot.end_date)}</p>
+        <div class="header-top-right">
+          <p class="header-date">{formatDate(spot.start_date)} → {formatDate(spot.end_date)}</p>
+          <button class="btn-edit-spot" onclick={startEditSpot} aria-label="Edit spot">
+            <Settings2 size={15} strokeWidth={1.5} />
+          </button>
+        </div>
       </div>
       <div class="header-bottom">
         <p class="header-sub">
@@ -299,6 +372,77 @@
       {/if}
     </div>
   </div>
+
+  {#if editingSpot}
+    <div class="form-card" style="margin-bottom: 20px;" transition:fade={{ duration: 150 }}>
+      <div class="field">
+        <label for="es-studio">Studio</label>
+        <input id="es-studio" bind:value={edit_studio_name} type="text" placeholder="Studio name" />
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="es-city">City</label>
+          <input id="es-city" bind:value={edit_city} type="text" placeholder="City" />
+        </div>
+        <div class="field">
+          <label for="es-country">Country</label>
+          <input id="es-country" bind:value={edit_country} type="text" placeholder="Country" />
+        </div>
+      </div>
+
+      <div class="field">
+        <p class="field-label">Dates</p>
+        <CalendarPicker
+          rangeMode={true}
+          bind:rangeStart={edit_start_date}
+          bind:rangeEnd={edit_end_date}
+          markedDates={[]}
+        />
+      </div>
+
+      <div class="field">
+        <p class="field-label">Deal type</p>
+        <div class="toggle">
+          <button type="button" class:active={edit_deal_type === 'flat_daily'} onclick={() => edit_deal_type = 'flat_daily'}>Flat daily</button>
+          <button type="button" class:active={edit_deal_type === 'percentage'} onclick={() => edit_deal_type = 'percentage'}>Commission %</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="es-deal">{edit_deal_type === 'flat_daily' ? 'Daily rate' : 'Commission %'}</label>
+          <input id="es-deal" bind:value={edit_deal_value} type="number" placeholder="0"
+            min="0"
+            max={edit_deal_type === 'percentage' ? 100 : undefined} />
+        </div>
+        <div class="field">
+          <label for="es-currency">Currency</label>
+          <select id="es-currency" bind:value={edit_currency}>
+            {#each currencies as c}
+              <option value={c}>{c}</option>
+            {/each}
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="es-notes">Notes</label>
+        <input id="es-notes" bind:value={edit_spot_notes} type="text" placeholder="Optional" />
+      </div>
+
+      {#if editSpotError}
+        <p class="form-error">{editSpotError}</p>
+      {/if}
+
+      <div class="edit-actions">
+        <button class="btn-cancel" onclick={cancelEditSpot}>Cancel</button>
+        <button class="btn-primary" onclick={saveEditSpot} disabled={savingSpot}>
+          {savingSpot ? '···' : 'Save changes'}
+        </button>
+      </div>
+    </div>
+  {/if}
 
   <div class="summary">
     <div class="summary-top">
@@ -330,7 +474,7 @@
     </div>
 
     {#if showSessionForm}
-      <div class="form-card">
+      <div class="form-card" transition:fade={{ duration: 150 }}>
         <div class="form-col">
           <div class="field">
             <label for="cal-session-date">Date</label>
@@ -369,10 +513,9 @@
 
         <div class="field">
           <p class="field-label">Payment method</p>
-          <div class="toggle three">
+          <div class="toggle">
             <button type="button" class:active={payment_method === 'cash'} onclick={() => payment_method = 'cash'}>Cash</button>
             <button type="button" class:active={payment_method === 'transfer'} onclick={() => payment_method = 'transfer'}>Transfer</button>
-            <button type="button" class:active={payment_method === 'card'} onclick={() => payment_method = 'card'}>Card</button>
           </div>
         </div>
 
@@ -437,10 +580,9 @@
 
             <div class="field">
               <p class="field-label">Payment method</p>
-              <div class="toggle three">
+              <div class="toggle">
                 <button type="button" class:active={edit_payment_method === 'cash'} onclick={() => edit_payment_method = 'cash'}>Cash</button>
                 <button type="button" class:active={edit_payment_method === 'transfer'} onclick={() => edit_payment_method = 'transfer'}>Transfer</button>
-                <button type="button" class:active={edit_payment_method === 'card'} onclick={() => edit_payment_method = 'card'}>Card</button>
               </div>
             </div>
 
@@ -501,7 +643,7 @@
     </div>
 
     {#if showCostForm}
-      <div class="form-card">
+      <div class="form-card" transition:fade={{ duration: 150 }}>
         <div class="field">
           <p class="field-label">Cost category</p>
           <div class="toggle four">
@@ -1088,4 +1230,51 @@
     border-color: var(--error);
     background: rgba(239, 68, 68, 0.06);
   }
+  .header-top-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn-edit-spot {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .btn-edit-spot:active { color: var(--text); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    padding: 12px 14px;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  select:focus { border-color: var(--text-2); outline: none; }
 </style>

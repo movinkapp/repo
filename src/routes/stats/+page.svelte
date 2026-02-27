@@ -1,14 +1,16 @@
 <script>
   import { supabase } from '$lib/supabase.js'
   import { onMount } from 'svelte'
+  import { fade } from 'svelte/transition'
   import { ChevronLeft } from 'lucide-svelte'
-  import { formatAmount, getStatus } from '$lib/utils.js'
+  import { formatAmount, getStatus, fadeSlide } from '$lib/utils.js'
 
   let spots = []
   let sessions = []
   let costs = []
   let loading = true
   let baseRate = 1
+  let activeBar = null
 
   const currentYear = new Date().getFullYear()
   let selectedYear = currentYear
@@ -151,7 +153,7 @@
   </div>
 
   {#if loading}
-    <div class="loading">···</div>
+    <div class="loading" transition:fade>···</div>
   {:else}
 
     <!-- NET PROFIT — destaque -->
@@ -210,8 +212,8 @@
         {:else}
           <div class="chart-inner">
             <div class="bars">
-              {#each monthlyData as month}
-                <div class="bar-col">
+              {#each monthlyData as month, i}
+                <button type="button" class="bar-col" onclick={() => activeBar = activeBar === i ? null : i}>
                   <div class="bar-area">
                     {#if month.net > 0}
                       <div class="bar bar-pos" style="height:{barH(month.net)}px"></div>
@@ -221,14 +223,27 @@
                       <div class="bar-zero"></div>
                     {/if}
                   </div>
-                  <p class="bar-label">{month.name}</p>
-                </div>
+                  <p class="bar-label" class:bar-label-active={activeBar === i}>{month.name}</p>
+                </button>
               {/each}
             </div>
             <div class="baseline"></div>
           </div>
         {/if}
       </div>
+
+    {#if activeBar !== null}
+      <div class="bar-tooltip" transition:fade={{ duration: 150 }}>
+        <p class="tooltip-month">{monthlyData[activeBar].name}</p>
+        <div class="tooltip-row">
+          <span class="tooltip-gross">↑ {formatAmount(monthlyData[activeBar].gross, currency)} {currency}</span>
+          <span class="tooltip-costs">↓ {formatAmount(monthlyData[activeBar].costs, currency)} {currency}</span>
+        </div>
+        <p class="tooltip-net {monthlyData[activeBar].net >= 0 ? 'pos' : 'neg'}">
+          {monthlyData[activeBar].net >= 0 ? '+' : ''}{formatAmount(monthlyData[activeBar].net, currency)} {currency}
+        </p>
+      </div>
+    {/if}
     </div>
 
   {/if}
@@ -524,4 +539,76 @@
     height: 1px;
     background: var(--border);
   }
+
+  .bar-col {
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+  }
+
+  .bar-label-active {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .bar-tooltip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 4px 16px;
+  }
+
+  .tooltip-month {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 2px;
+  }
+
+  .tooltip-row {
+    justify-self: end;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .tooltip-gross {
+    font-size: 12px;
+    color: var(--upcoming);
+    font-weight: 500;
+  }
+
+  .tooltip-costs {
+    font-size: 12px;
+    color: var(--error);
+    font-weight: 500;
+  }
+
+  .tooltip-net {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .tooltip-net.pos { color: var(--upcoming); }
+  .tooltip-net.neg { color: var(--error); }
 </style>
