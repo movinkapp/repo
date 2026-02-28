@@ -2,10 +2,10 @@
   "name": "Movink",
   "short_name": "Movink",
   "description": "Built for artists who never stop moving.",
-  "start_url": "/",
+  "start_url": "/home",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#111111",
+  "theme_color": "#111111",
   "icons": [
     {
       "src": "/favicon.svg",

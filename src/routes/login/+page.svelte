@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation'
   import { fade } from 'svelte/transition'
   import { toast } from '$lib/toast.js'
+  import { Eye, EyeOff } from 'lucide-svelte'
 
   let email = ''
   let password = ''
@@ -10,30 +11,18 @@
   let loading = false
   let error = ''
   let mode = 'login'
+  let showPassword = false
 
   async function handleSubmit() {
     loading = true
     error = ''
 
     if (mode === 'login') {
-      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password })
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password })
       if (err) {
         error = err.message
         toast(err.message, 'error')
       } else {
-        // sync tokens to server cookies so hooks can read session on subsequent requests
-        try {
-          const session = data?.session
-          if (session?.access_token) {
-            await fetch('/api/auth/sync', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token })
-            })
-          }
-        } catch (e) {
-          console.error('auth sync failed', e)
-        }
         goto('/home')
       }
     } else {
@@ -102,7 +91,27 @@
 
       <div class="field">
         <label for="password">Password</label>
-        <input id="password" bind:value={password} type="password" placeholder="········" />
+        <div class="input-wrap">
+          <input
+            id="password"
+            bind:value={password}
+            type={showPassword ? 'text' : 'password'}
+            placeholder="········"
+          />
+          <button
+            type="button"
+            class="eye-btn"
+            onclick={() => showPassword = !showPassword}
+            tabindex="-1"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+          >
+            {#if showPassword}
+              <EyeOff size={16} strokeWidth={1.5} />
+            {:else}
+              <Eye size={16} strokeWidth={1.5} />
+            {/if}
+          </button>
+        </div>
       </div>
 
       {#if error}
@@ -110,7 +119,7 @@
       {/if}
 
       <button class="btn-primary" onclick={handleSubmit} disabled={loading}>
-        {loading ? '···' : mode === 'login' ? 'Let\'s go' : 'Join Movink'}
+        {loading ? '···' : mode === 'login' ? "Let's go" : 'Join Movink'}
       </button>
 
       <button class="btn-ghost" onclick={() => { mode = mode === 'login' ? 'register' : 'login'; error = '' }}>
@@ -197,8 +206,34 @@
     appearance: none;
   }
 
-  input:focus { border-color: var(--text-2); }
+  input:focus { border-color: var(--text-2); outline: none; }
   input::placeholder { color: var(--text-3); }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-wrap input {
+    width: 100%;
+    padding-right: 44px;
+  }
+
+  .eye-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    transition: color 0.2s;
+  }
+
+  .eye-btn:active { color: var(--text); }
 
   .btn-primary {
     background: var(--text);
