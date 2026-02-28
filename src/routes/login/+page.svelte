@@ -16,11 +16,24 @@
     error = ''
 
     if (mode === 'login') {
-      const { error: err } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password })
       if (err) {
         error = err.message
         toast(err.message, 'error')
       } else {
+        // sync tokens to server cookies so hooks can read session on subsequent requests
+        try {
+          const session = data?.session
+          if (session?.access_token) {
+            await fetch('/api/auth/sync', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token })
+            })
+          }
+        } catch (e) {
+          console.error('auth sync failed', e)
+        }
         goto('/home')
       }
     } else {
