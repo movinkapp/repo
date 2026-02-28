@@ -5,10 +5,13 @@
   import { ChevronLeft } from 'lucide-svelte'
   import { currencySymbols } from '$lib/utils.js'
   import CalendarPicker from '$lib/components/CalendarPicker.svelte'
+  import CityPicker from '$lib/components/CityPicker.svelte'
 
   let studio_name = ''
   let city = ''
   let country = ''
+  let city_lat = null
+  let city_lon = null
   let start_date = null
   let end_date = null
   let deal_type = 'flat_daily'
@@ -33,7 +36,7 @@
     loading = true
     error = ''
 
-    if (!studio_name || !city || !country || !start_date || !end_date || !deal_value) {
+    if (!studio_name || !city || !start_date || !end_date || !deal_value) {
       error = 'Please fill in all required fields.'
       loading = false
       return
@@ -53,6 +56,10 @@
       studio_name,
       city,
       country,
+      city_normalized: city,
+      country_code: '',
+      lat: city_lat,
+      lon: city_lon,
       start_date: start_date ? `${start_date.getFullYear()}-${String(start_date.getMonth() + 1).padStart(2, '0')}-${String(start_date.getDate()).padStart(2, '0')}` : null,
       end_date: end_date ? `${end_date.getFullYear()}-${String(end_date.getMonth() + 1).padStart(2, '0')}-${String(end_date.getDate()).padStart(2, '0')}` : null,
       deal_type,
@@ -92,11 +99,17 @@
     <div class="row">
       <div class="field">
         <label for="city">City</label>
-        <input id="city" bind:value={city} type="text" placeholder="City" />
-      </div>
-      <div class="field">
-        <label for="country">Country</label>
-        <input id="country" bind:value={country} type="text" placeholder="Country" />
+        <CityPicker
+          id="city"
+          bind:value={city}
+          bind:country={country}
+          bind:lat={city_lat}
+          bind:lon={city_lon}
+          placeholder="City"
+        />
+        {#if country}
+          <p class="field-hint">{country}</p>
+        {/if}
       </div>
     </div>
 
@@ -337,6 +350,12 @@
   .toggle button.active {
     background: var(--text);
     color: var(--bg);
+  }
+
+  .field-hint {
+    font-size: 12px;
+    color: var(--text-3);
+    padding: 0 2px;
   }
 
 </style>

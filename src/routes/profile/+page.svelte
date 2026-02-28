@@ -2,7 +2,7 @@
   import { supabase } from '$lib/supabase.js'
   import { goto } from '$app/navigation'
   import { onMount } from 'svelte'
-  import { LogOut, BarChart2, ChevronRight } from 'lucide-svelte'
+  import { LogOut, BarChart2, ChevronRight, Users } from 'lucide-svelte'
   import { toasts, toast } from '$lib/toast.js'
   import { currencySymbols, fadeSlide } from '$lib/utils.js'
   import { requestNotificationPermission, isNotificationsEnabled, disableNotifications } from '$lib/notifications.js'
@@ -11,6 +11,9 @@
   let baseCurrency = 'EUR'
   let tempCurrency = 'EUR'
   let loading = true
+  let instagram = ''
+  let communityVisible = false
+  let savingProfile = false
   let notificationsEnabled = false
   let notifLoading = false
   let notifPermission = 'default'
@@ -24,11 +27,13 @@
 
     const { data: profile } = await supabase
       .from('users')
-      .select('base_currency')
+      .select('base_currency, instagram, community_visible')
       .eq('id', u.id)
       .single()
 
     baseCurrency = profile?.base_currency || 'EUR'
+    instagram = profile?.instagram || ''
+    communityVisible = profile?.community_visible || false
     loading = false
     notificationsEnabled = await isNotificationsEnabled()
     if (typeof Notification !== 'undefined') {
@@ -39,6 +44,27 @@
   function openModal() {
     tempCurrency = baseCurrency
     modalOpen = true
+  }
+
+  async function saveInstagram() {
+    savingProfile = true
+    const clean = instagram.replace(/^@/, '').trim()
+    instagram = clean
+    await supabase
+      .from('users')
+      .update({ instagram: clean })
+      .eq('id', user.id)
+    savingProfile = false
+    toast('Instagram saved')
+  }
+
+  async function toggleCommunity() {
+    communityVisible = !communityVisible
+    await supabase
+      .from('users')
+      .update({ community_visible: communityVisible })
+      .eq('id', user.id)
+    toast(communityVisible ? 'You are now visible to other artists' : 'You are now hidden from the community')
   }
 
   async function saveCurrency() {
@@ -132,6 +158,17 @@
       </a>
     </div>
 
+      <div class="section">
+        <a href="/community" class="card-cta">
+          <div class="cta-header">
+            <Users size={16} strokeWidth={1.5} />
+            <p class="cta-label">Community</p>
+          </div>
+          <p class="cta-title">Who's in your city?</p>
+          <p class="cta-hint">See other artists doing guest spots near you →</p>
+        </a>
+      </div>
+
     <div class="section">
       <p class="section-label">Preferences</p>
       <div class="menu">
@@ -166,6 +203,38 @@
           </button>
         {/if}
       </div>
+    </div>
+
+    <div class="section">
+      <p class="section-label">Profile</p>
+      <div class="menu">
+        <div class="menu-item menu-item-instagram">
+          <div class="menu-item-left" style="flex:1;">
+            <span class="menu-item-label">Instagram</span>
+            <input
+              class="instagram-input"
+              type="text"
+              placeholder="@yourhandle"
+              bind:value={instagram}
+              onblur={saveInstagram}
+            />
+          </div>
+        </div>
+        <button class="menu-item" onclick={toggleCommunity}>
+          <div class="menu-item-left">
+            <span class="menu-item-label">Artist community</span>
+            <span class="menu-item-value">
+              {communityVisible ? 'Visible to other artists' : 'Hidden — tap to join'}
+            </span>
+          </div>
+          <span class="notif-status {communityVisible ? 'notif-on' : 'notif-off'}"></span>
+        </button>
+      </div>
+      {#if communityVisible}
+        <p class="community-hint">
+          Other artists can see you're in the same city during your guest spots. You can see them too.
+        </p>
+      {/if}
     </div>
 
     <div class="section">
@@ -458,5 +527,30 @@
   .notif-off { background: var(--border); }
   .notif-blocked {
     color: var(--error) !important;
+  }
+
+  .instagram-input {
+    background: none;
+    border: none;
+    color: var(--text-2);
+    font-family: var(--font-body);
+    font-size: 13px;
+    padding: 0;
+    width: 100%;
+    outline: none;
+    margin-top: 2px;
+  }
+
+  .instagram-input::placeholder { color: var(--text-3); }
+
+  .menu-item-instagram { cursor: default; }
+  .menu-item-instagram:active { background: none; }
+
+  .community-hint {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 8px;
+    padding: 0 4px;
+    line-height: 1.6;
   }
 </style>

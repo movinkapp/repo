@@ -21,7 +21,7 @@
         error = err.message
         toast(err.message, 'error')
       } else {
-        goto('/')
+        goto('/home')
       }
     } else {
       const { error: err } = await supabase.auth.signUp({

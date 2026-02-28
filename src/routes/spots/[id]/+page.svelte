@@ -8,6 +8,7 @@
   import { formatDate, formatDeal, formatAmount } from '$lib/utils.js'
   import { toast } from '$lib/toast.js'
   import CalendarPicker from '$lib/components/CalendarPicker.svelte'
+  import CityPicker from '$lib/components/CityPicker.svelte'
 
   let spot = null
   let sessions = []
@@ -23,6 +24,8 @@
   let edit_studio_name = ''
   let edit_city = ''
   let edit_country = ''
+  let edit_city_lat = null
+  let edit_city_lon = null
   let edit_start_date = null
   let edit_end_date = null
   let edit_deal_type = 'flat_daily'
@@ -292,6 +295,8 @@
     edit_studio_name = spot.studio_name
     edit_city = spot.city
     edit_country = spot.country
+    edit_city_lat = spot.lat || null
+    edit_city_lon = spot.lon || null
     edit_start_date = spot.start_date ? new Date(spot.start_date + 'T12:00:00') : null
     edit_end_date = spot.end_date ? new Date(spot.end_date + 'T12:00:00') : null
     edit_deal_type = spot.deal_type
@@ -308,7 +313,7 @@
   }
 
   async function saveEditSpot() {
-    if (!edit_studio_name || !edit_city || !edit_country || !edit_start_date || !edit_end_date || !edit_deal_value) {
+    if (!edit_studio_name || !edit_city || !edit_start_date || !edit_end_date || !edit_deal_value) {
       editSpotError = 'Please fill in all required fields.'
       return
     }
@@ -316,7 +321,10 @@
     const { error } = await supabase.from('spots').update({
       studio_name: edit_studio_name,
       city: edit_city,
+      city_normalized: edit_city,
       country: edit_country,
+      lat: edit_city_lat,
+      lon: edit_city_lon,
       start_date: toLocalDateStr(edit_start_date),
       end_date: toLocalDateStr(edit_end_date),
       deal_type: edit_deal_type,
@@ -424,11 +432,17 @@
       <div class="form-row">
         <div class="field">
           <label for="es-city">City</label>
-          <input id="es-city" bind:value={edit_city} type="text" placeholder="City" />
-        </div>
-        <div class="field">
-          <label for="es-country">Country</label>
-          <input id="es-country" bind:value={edit_country} type="text" placeholder="Country" />
+          <CityPicker
+            id="es-city"
+            bind:value={edit_city}
+            bind:country={edit_country}
+            bind:lat={edit_city_lat}
+            bind:lon={edit_city_lon}
+            placeholder="City"
+          />
+          {#if edit_country}
+            <p class="field-hint">{edit_country}</p>
+          {/if}
         </div>
       </div>
 
