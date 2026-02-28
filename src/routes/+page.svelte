@@ -3,6 +3,20 @@
   import { goto } from '$app/navigation'
   import { supabase } from '$lib/supabase.js'
 
+  function showIosSteps() {
+    document.getElementById('tab-ios').classList.add('active');
+    document.getElementById('tab-android').classList.remove('active');
+    document.getElementById('steps-ios').style.display = 'flex';
+    document.getElementById('steps-android').style.display = 'none';
+  }
+
+  function showAndroidSteps() {
+    document.getElementById('tab-android').classList.add('active');
+    document.getElementById('tab-ios').classList.remove('active');
+    document.getElementById('steps-android').style.display = 'flex';
+    document.getElementById('steps-ios').style.display = 'none';
+  }
+
   onMount(async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
@@ -199,7 +213,7 @@
   <nav class="nav-links">
     <a href="#features" class="nav-link">Features</a>
     <a href="#install"  class="nav-link">Install</a>
-    <a href="/login"    class="nav-cta">Get started →</a>
+    <a href="/waitlist" class="nav-cta">Get started →</a>
   </nav>
 </header>
 
@@ -223,8 +237,8 @@
       </div>
 
       <div class="hero-bottom">
-        <a href="/login" class="btn-hero">Start for free</a>
-        <p class="hero-note">No card &nbsp;·&nbsp; Any device &nbsp;·&nbsp; Works offline</p>
+        <a href="/waitlist" class="btn-hero">Join private beta →</a>
+        <p class="hero-note">Limited access &nbsp;·&nbsp; Any device &nbsp;·&nbsp; Works offline</p>
       </div>
     </div>
 
@@ -269,24 +283,7 @@
     </div>
   </div>
 
-  <span class="bg-word" aria-hidden="true">MOVE</span>
 </section>
-
-<!-- ══ DIVIDER TICKER ════════════════════════════════════════════════ -->
-<div class="ticker-band" aria-hidden="true">
-  <div class="ticker-inner">
-    {#each {length: 4} as _}
-      <span>PLAN YOUR SPOT</span>
-      <span class="td">—</span>
-      <span>TRACK EVERY SESSION</span>
-      <span class="td">—</span>
-      <span>KNOW YOUR NUMBERS</span>
-      <span class="td">—</span>
-      <span>CITY TO CITY</span>
-      <span class="td">—</span>
-    {/each}
-  </div>
-</div>
 
 <!-- ══ FEATURES ═════════════════════════════════════════════════════ -->
 <section class="features" id="features">
@@ -461,41 +458,94 @@
     <div class="install-hd reveal">
       <p class="section-tag">Install</p>
       <h2>No App Store.<br/><em>Just open and go.</em></h2>
-      <p class="install-sub">Movink is a PWA — install directly from Safari in seconds. No download, no update, no waiting.</p>
+      <p class="install-sub">Movink is a PWA — install directly from your browser in seconds. No download, no update, no waiting.</p>
     </div>
     <div class="install-steps reveal">
-      <div class="istep">
-        <div class="istep-icon">
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-            <rect x="4" y="6" width="24" height="20" rx="3" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M16 18V10M13 13L16 10L19 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <p class="istep-n">01</p>
-        <p class="istep-title">Tap Share</p>
-        <p class="istep-desc">Open in Safari, tap the Share button at the bottom of your screen.</p>
+      <div class="install-tabs">
+        <button class="itab active" id="tab-ios" on:click={showIosSteps}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          iOS — Safari
+        </button>
+        <button class="itab" id="tab-android" on:click={showAndroidSteps}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.341a.95.95 0 0 1-.953.953.95.95 0 0 1-.953-.953.95.95 0 0 1 .953-.953.95.95 0 0 1 .953.953m-9.093 0a.95.95 0 0 1-.953.953.95.95 0 0 1-.953-.953.95.95 0 0 1 .953-.953.95.95 0 0 1 .953.953m9.443-6.48L19.2 5.32a.37.37 0 0 0-.137-.506.37.37 0 0 0-.506.137l-1.353 2.604A11.1 11.1 0 0 0 12 6.545c-1.498 0-2.92.307-4.204.847L6.443 4.951a.37.37 0 0 0-.506-.137.37.37 0 0 0-.137.506l1.327 2.541C4.612 9.48 3 12.039 3 15h18c0-2.961-1.612-5.52-4.127-7.139"/></svg>
+          Android — Chrome
+        </button>
       </div>
-      <div class="istep">
-        <div class="istep-icon">
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-            <rect x="6" y="6" width="20" height="20" rx="3" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M16 11V21M11 16H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
+
+      <div id="steps-ios" style="display:flex;flex-direction:column;gap:0">
+        <div class="istep">
+          <div class="istep-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p class="istep-n">01</p>
+          <p class="istep-title">Tap Share</p>
+          <p class="istep-desc">Open movink.app in Safari. Tap the Share icon at the bottom of your screen.</p>
         </div>
-        <p class="istep-n">02</p>
-        <p class="istep-title">Add to Home Screen</p>
-        <p class="istep-desc">Scroll down in the share sheet and tap "Add to Home Screen".</p>
+        <div class="istep">
+          <div class="istep-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+          </div>
+          <p class="istep-n">02</p>
+          <p class="istep-title">Add to Home Screen</p>
+          <p class="istep-desc">Scroll down in the share sheet and tap "Add to Home Screen".</p>
+        </div>
+        <div class="istep">
+          <div class="istep-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="9 12 11 14 15 10"/>
+            </svg>
+          </div>
+          <p class="istep-n">03</p>
+          <p class="istep-title">Open Movink</p>
+          <p class="istep-desc">Tap the Movink icon on your home screen. Opens fullscreen, just like native.</p>
+        </div>
       </div>
-      <div class="istep">
-        <div class="istep-icon">
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-            <path d="M16 4C9.37 4 4 9.37 4 16s5.37 12 12 12 12-5.37 12-12S22.63 4 16 4z" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M12 16l3 3 5-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+
+      <div id="steps-android" style="display:none;flex-direction:column;gap:0">
+        <div class="istep">
+          <div class="istep-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="12" cy="5" r="1" fill="currentColor"/>
+              <circle cx="12" cy="12" r="1" fill="currentColor"/>
+              <circle cx="12" cy="19" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          <p class="istep-n">01</p>
+          <p class="istep-title">Tap the menu</p>
+          <p class="istep-desc">Open movink.app in Chrome. Tap the three dots ⋮ in the top right corner.</p>
         </div>
-        <p class="istep-n">03</p>
-        <p class="istep-title">Open Movink</p>
-        <p class="istep-desc">Tap the icon on your home screen. Opens fullscreen, just like native.</p>
+        <div class="istep">
+          <div class="istep-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <p class="istep-n">02</p>
+          <p class="istep-title">Add to Home screen</p>
+          <p class="istep-desc">Tap "Add to Home screen" from the menu and confirm.</p>
+        </div>
+        <div class="istep">
+          <div class="istep-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="9 12 11 14 15 10"/>
+            </svg>
+          </div>
+          <p class="istep-n">03</p>
+          <p class="istep-title">Open Movink</p>
+          <p class="istep-desc">Tap the Movink icon on your home screen. Opens fullscreen, just like native.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -504,16 +554,15 @@
 <!-- ══ FINALE ════════════════════════════════════════════════════════ -->
 <section class="finale">
   <div class="finale-inner reveal">
-    <p class="finale-tag">Free. Always.</p>
+    <p class="finale-tag">Private beta.</p>
     <h2 class="finale-title">
       Built for artists<br/>
       <em>who never stop</em><br/>
       moving.
     </h2>
-    <a href="/login" class="btn-finale">Get Movink free →</a>
-    <p class="finale-note">No credit card &nbsp;·&nbsp; No App Store &nbsp;·&nbsp; Open and go</p>
+    <a href="/waitlist" class="btn-finale">Request access →</a>
+    <p class="finale-note">Limited spots &nbsp;·&nbsp; No App Store &nbsp;·&nbsp; Open and go</p>
   </div>
-  <span class="finale-bg" aria-hidden="true">INK</span>
 </section>
 
 <footer>
@@ -524,6 +573,38 @@
 </footer>
 
 <style>
+    .install-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .itab {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-3);
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.2px;
+    }
+
+    .itab.active {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+    }
+
+    .itab svg { flex-shrink: 0; }
   /* ── RESET ─────────────────────────────────────────────────────── */
   :global(body) {
     max-width: 100% !important;
@@ -556,14 +637,14 @@
     pointer-events: none;
   }
 
-  header, section, footer, .ticker-band {
+  header, section, footer {
     position: relative;
     z-index: 1;
   }
 
   /* ── WORDMARK (match login) ──────────────────────────────────────── */
   .wm-mov { font-weight: 800; }
-  .wm-ink { font-weight: 200; color: var(--text-3); }
+  .wm-ink { font-weight: 200; }
 
   /* ── NAV ─────────────────────────────────────────────────────────── */
   .nav {
@@ -847,56 +928,15 @@
     letter-spacing: -0.8px;
   }
 
-  /* background word */
-  .bg-word {
-    position: absolute;
-    bottom: -0.15em;
-    right: -0.02em;
-    font-family: var(--font-display);
-    font-size: clamp(170px, 27vw, 380px);
-    font-weight: 800;
-    color: rgba(240,240,240,0.02);
-    pointer-events: none;
-    user-select: none;
-    letter-spacing: -10px;
-    line-height: 1;
-    z-index: 0;
-  }
 
   /* ── TICKER BAND ─────────────────────────────────────────────────── */
-  .ticker-band {
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    overflow: hidden;
-    padding: 13px 0;
-    background: var(--surface);
-  }
-
-  .ticker-inner {
-    display: inline-block;
-    white-space: nowrap;
-    animation: ticker 26s linear infinite;
-    font-family: var(--font-body);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--text-3);
-  }
-
-  .ticker-inner span { margin: 0 16px; }
-  .td { color: var(--text-3); opacity: 0.4; }
-
-  @keyframes ticker {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-25%); }
-  }
 
   /* ── FEATURES ─────────────────────────────────────────────────────── */
   .features {
     padding: 0 48px 48px;
     max-width: 1100px;
     margin: 0 auto;
+    scroll-margin-top: 80px;
   }
 
   .feat-rule {
@@ -1194,6 +1234,7 @@
     padding: 80px 48px;
     border-top: 1px solid var(--border);
     background: var(--surface);
+    scroll-margin-top: 80px;
   }
 
   .install-wrap {
@@ -1260,7 +1301,7 @@
     display: flex;
     align-items: flex-start;
     padding-top: 2px;
-    color: var(--text-3);
+    color: var(--upcoming);
   }
 
   .istep-n {
@@ -1369,20 +1410,6 @@
     margin-top: 10px;
   }
 
-  .finale-bg {
-    position: absolute;
-    bottom: -0.12em;
-    right: -0.03em;
-    font-family: var(--font-display);
-    font-size: clamp(180px, 28vw, 400px);
-    font-weight: 800;
-    font-style: italic;
-    color: rgba(240,240,240,0.016);
-    pointer-events: none;
-    user-select: none;
-    letter-spacing: -12px;
-    line-height: 1;
-  }
 
   /* ── FOOTER ───────────────────────────────────────────────────────── */
   footer {
@@ -1455,10 +1482,7 @@
 
     
 
-    .bg-word { font-size: 48vw; letter-spacing: -4px; }
-    .bg-word { font-size: 36vw; letter-spacing: -3px; right: 4%; bottom: 6%; }
 
-    .ticker-band { display: none; }
 
     .features { padding: 0 20px 32px; }
 
@@ -1495,7 +1519,6 @@
       letter-spacing: -2px;
       margin-bottom: 16px;
     }
-    .finale-bg { font-size: 40vw; right: 6%; bottom: -0.06em; }
 
     footer { padding: 20px; }
   }
