@@ -413,6 +413,12 @@
 
   .cta-hint { font-size: 13px; color: var(--text-3); }
 
+  .explore-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
   /* Bottom sheet */
   .overlay {
     position: fixed;
