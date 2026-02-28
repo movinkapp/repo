@@ -6,14 +6,49 @@
 
   let status = 'Confirming your email...'
   let detail = ''
+   let confirmationUrl = ''
 
   onMount(async () => {
     try {
       const { data, error } = await supabase.auth.getSessionFromUrl()
       if (error) {
-        status = 'Confirmation failed. Please try logging in.'
-        detail = error?.message || JSON.stringify(error)
+         status = 'Confirmation failed. Please try logging in.'
+         detail = error?.message || JSON.stringify(error)
+         // expose the full URL so users (or devs) can copy/paste if the email template
+         // failed to render the confirmation link correctly (e.g. showed {{ .ConfirmationURL }})
+         confirmationUrl = window.location.href
         console.error('getSessionFromUrl error', error)
+        // Attempt fallback: parse tokens from URL fragment or query and set session client-side
+        try {
+          const href = window.location.href
+          const u = new URL(href)
+          let access_token = null
+          let refresh_token = null
+
+          if (u.hash) {
+            const hash = new URLSearchParams(u.hash.replace(/^#/, ''))
+            access_token = hash.get('access_token')
+            refresh_token = hash.get('refresh_token')
+          }
+
+          if (!access_token) {
+            // try query params as a fallback
+            access_token = u.searchParams.get('access_token') || u.searchParams.get('token')
+            refresh_token = u.searchParams.get('refresh_token')
+          }
+
+          if (access_token) {
+            // set session manually and redirect
+            await supabase.auth.setSession({ access_token, refresh_token })
+            const next = $page.url.searchParams.get('next') || '/onboarding'
+            status = 'Email confirmed — redirecting...'
+            setTimeout(() => goto(next), 600)
+            return
+          }
+        } catch (e) {
+          console.error('fallback session set failed', e)
+        }
+
         return
       }
       const next = $page.url.searchParams.get('next') || '/onboarding'
@@ -88,8 +123,16 @@
         Continue
       </a>
     </p>
-    {#if detail}
-      <pre>{detail}</pre>
-    {/if}
+   {#if detail}
+     <pre>{detail}</pre>
+   {/if}
+
+   {#if confirmationUrl}
+     <p class="meta">If the email link didn't work, copy & paste this URL into your browser:</p>
+     <pre style="word-break:break-all">{confirmationUrl}</pre>
+     <p>
+       <button class="btn" onclick={() => { navigator.clipboard?.writeText(confirmationUrl) }}>Copy link</button>
+     </p>
+   {/if}
   </div>
 </main>
