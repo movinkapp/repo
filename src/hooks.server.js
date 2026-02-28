@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@supabase/auth-helpers-sveltekit'
+import { createServerClient } from '@supabase/auth-helpers-sveltekit'
 import { redirect } from '@sveltejs/kit'
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public'
 
@@ -12,7 +12,22 @@ export const handle = async ({ event, resolve }) => {
     return await resolve(event)
   }
 
-  const supabase = createSupabaseServerClient({ supabaseUrl: PUBLIC_SUPABASE_URL, supabaseKey: PUBLIC_SUPABASE_ANON_KEY }, event)
+  const cookies = {
+    get: (name) => event.cookies.get(name),
+    set: (name, value, options) => event.cookies.set(name, value, options),
+    remove: (name, options) => event.cookies.set(name, '', { ...(options || {}), maxAge: 0 })
+  }
+
+  let supabase
+  try {
+    supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, { cookies, fetch: event.fetch })
+  } catch (e) {
+    console.error('supabase createServerClient failed in hooks:', e)
+    // fail open to avoid crashing the serverless function; allow public pages
+    event.locals.session = null
+    return await resolve(event)
+  }
+
   const { data: { session } } = await supabase.auth.getSession()
 
   // expose session to the app
