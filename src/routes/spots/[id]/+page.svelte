@@ -6,7 +6,7 @@
   import { goto } from '$app/navigation'
   import { ChevronLeft, Plus, MapPin, X, Trash2, Pencil, Settings2, ClipboardList, Check } from 'lucide-svelte'
   import { formatDate, formatDeal, formatAmount } from '$lib/utils.js'
-  import { toast } from '$lib/toast.js'
+  import { toast, toastConfirm } from '$lib/toast.js'
   import CalendarPicker from '$lib/components/CalendarPicker.svelte'
   import CityPicker from '$lib/components/CityPicker.svelte'
 
@@ -237,12 +237,13 @@
     toast('Session updated')
   }
 
-  async function deleteSession(id) {
-    if (!confirm('Delete this session?')) return
-    const { error } = await supabase.from('sessions').delete().eq('id', id)
-    if (error) { toast('Could not delete session. Try again.', 'error'); return }
-    sessions = sessions.filter(s => s.id !== id)
-    toast('Session deleted')
+  function deleteSession(id) {
+    toastConfirm('Delete this session?', async () => {
+      const { error } = await supabase.from('sessions').delete().eq('id', id)
+      if (error) { toast('Could not delete session. Try again.', 'error'); return }
+      sessions = sessions.filter(s => s.id !== id)
+      toast('Session deleted', 'success')
+    })
   }
 
   function startEditCost(cost) {
@@ -283,12 +284,13 @@
     toast('Cost updated')
   }
 
-  async function deleteCost(id) {
-    if (!confirm('Delete this cost?')) return
-    const { error } = await supabase.from('costs').delete().eq('id', id)
-    if (error) { toast('Could not delete cost. Try again.', 'error'); return }
-    costs = costs.filter(c => c.id !== id)
-    toast('Cost deleted')
+  function deleteCost(id) {
+    toastConfirm('Delete this cost?', async () => {
+      const { error } = await supabase.from('costs').delete().eq('id', id)
+      if (error) { toast('Could not delete cost. Try again.', 'error'); return }
+      costs = costs.filter(c => c.id !== id)
+      toast('Cost deleted', 'success')
+    })
   }
 
   function startEditSpot() {
@@ -362,12 +364,13 @@
     }
   }
 
-  async function deleteSpot() {
-    if (!confirm('Delete this entire spot?')) return
-    const { error } = await supabase.from('spots').delete().eq('id', spot.id)
-    if (error) { toast('Could not delete spot. Try again.', 'error'); return }
-    toast('Spot deleted')
-    goto('/spots')
+  function deleteSpot() {
+    toastConfirm('Delete this entire spot?', async () => {
+      const { error } = await supabase.from('spots').delete().eq('id', spot.id)
+      if (error) { toast('Could not delete spot. Try again.', 'error'); return }
+      toast('Spot deleted', 'success')
+      goto('/spots')
+    })
   }
 
   $: sessionDates = sessions.map(s => s.date).filter(Boolean)
@@ -430,19 +433,22 @@
       </div>
 
       <div class="form-row">
-        <div class="field">
+        <div class="field city-field">
           <label for="es-city">City</label>
-          <CityPicker
-            id="es-city"
-            bind:value={edit_city}
-            bind:country={edit_country}
-            bind:lat={edit_city_lat}
-            bind:lon={edit_city_lon}
-            placeholder="City"
-          />
-          {#if edit_country}
-            <p class="field-hint">{edit_country}</p>
-          {/if}
+          <div class="city-stack">
+            <CityPicker
+              class="city-picker"
+              id="es-city"
+              bind:value={edit_city}
+              bind:country={edit_country}
+              bind:lat={edit_city_lat}
+              bind:lon={edit_city_lon}
+              placeholder="City"
+            />
+            {#if edit_country}
+              <span class="field-country field-country-below">{edit_country}</span>
+            {/if}
+          </div>
         </div>
       </div>
 
@@ -1033,12 +1039,26 @@
     margin-top: -6px;
   }
 
-  .optional {
-    font-size: 10px;
-    font-weight: 400;
+  .city-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .city-stack :global(.city-picker) { width: 100%; }
+
+  .city-field { margin-bottom: 8px; }
+
+  .field-country {
+    font-size: 13px;
     color: var(--text-3);
-    text-transform: none;
-    letter-spacing: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    flex: 0 0 auto;
   }
 
   .form-card {
@@ -1046,11 +1066,13 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 16px;
-    margin-bottom: 12px;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     gap: 14px;
   }
+
+  .field-country-below { align-self: flex-start; }
 
   .form-col {
     display: flex;
@@ -1482,4 +1504,17 @@
   }
 
   /* removed disabled styles to keep checklist interactive; completion is shown on the button */
+
+  .city-field { margin-bottom: 8px; }
+
+  .field-country {
+    font-size: 13px;
+    color: var(--text-3);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
 </style>

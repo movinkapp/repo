@@ -20,10 +20,10 @@
     if (q.length < 2) { suggestions = []; showDropdown = false; return }
     loading = true
     try {
-      const res = await fetch(
-        `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&layer=city`
-      )
+      console.log('[CityPicker] searching:', q)
+      const res = await fetch(`/api/photon?q=${encodeURIComponent(q)}`)
       const data = await res.json()
+      console.log('[CityPicker] results:', data.features?.length)
       suggestions = data.features.map(f => ({
         city: f.properties.name,
         country: f.properties.country || '',
@@ -32,7 +32,8 @@
         lon: f.geometry.coordinates[0]
       }))
       showDropdown = suggestions.length > 0
-    } catch {
+    } catch (e) {
+      console.error('[CityPicker] fetch error:', e)
       suggestions = []
     } finally {
       loading = false
@@ -40,8 +41,19 @@
   }
 
   function onInput(e) {
+    console.log('[CityPicker] onInput:', e.target.value)
     query = e.target.value
+    // clear selected value when user types/clears input
     value = ''
+    if (!query || query.trim() === '') {
+      country = ''
+      lat = null
+      lon = null
+      suggestions = []
+      showDropdown = false
+      clearTimeout(debounceTimer)
+      return
+    }
     clearTimeout(debounceTimer)
     debounceTimer = setTimeout(() => search(query), 280)
   }

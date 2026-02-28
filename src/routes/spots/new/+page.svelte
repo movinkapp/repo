@@ -97,19 +97,22 @@
     </div>
 
     <div class="row">
-      <div class="field">
+      <div class="field city-field">
         <label for="city">City</label>
-        <CityPicker
-          id="city"
-          bind:value={city}
-          bind:country={country}
-          bind:lat={city_lat}
-          bind:lon={city_lon}
-          placeholder="City"
-        />
-        {#if country}
-          <p class="field-hint">{country}</p>
-        {/if}
+        <div class="city-stack">
+          <CityPicker
+            class="city-picker"
+            id="city"
+            bind:value={city}
+            bind:country={country}
+            bind:lat={city_lat}
+            bind:lon={city_lon}
+            placeholder="City"
+          />
+          {#if country}
+            <span class="field-country field-country-below">{country}</span>
+          {/if}
+        </div>
       </div>
     </div>
 
@@ -215,7 +218,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .field {
@@ -352,10 +355,29 @@
     color: var(--bg);
   }
 
-  .field-hint {
-    font-size: 12px;
-    color: var(--text-3);
-    padding: 0 2px;
+
+  .city-field { margin-bottom: 8px; }
+
+  .city-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
   }
+
+  .city-stack :global(.city-picker) { width: 100%; }
+
+  .field-country {
+    font-size: 13px;
+    color: var(--text-3);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .field-country-below { align-self: flex-start; }
 
 </style>

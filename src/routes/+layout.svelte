@@ -20,13 +20,14 @@
       return
     }
 
-    if (session && (pathname === '/login' || pathname === '/')) {
+    if (session && pathname === '/login') {
       goto('/home')
       authChecked = true
       return
     }
 
-    if (pathname !== '/onboarding') {
+    // don't force onboarding when user is on the public landing ('/')
+    if (pathname !== '/onboarding' && pathname !== '/') {
       const { data: profile } = await supabase
         .from('users')
         .select('onboarding_completed')

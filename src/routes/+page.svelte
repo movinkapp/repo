@@ -10,12 +10,9 @@
       return
     }
 
-    // Redirect logged-in users away from landing
+    // Redirect installed PWA users straight to the app
+    // (keep landing accessible to logged-in users; layout handles login redirects)
     const { data: { session } } = await supabase.auth.getSession()
-    if (session) {
-      goto('/home')
-      return
-    }
     // ── CANVAS — ink trail diagonal ─────────────────────────────────
     const canvas = document.getElementById('inkCanvas')
     if (!canvas) return
