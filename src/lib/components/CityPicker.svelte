@@ -20,10 +20,8 @@
     if (q.length < 2) { suggestions = []; showDropdown = false; return }
     loading = true
     try {
-      console.log('[CityPicker] searching:', q)
       const res = await fetch(`/api/photon?q=${encodeURIComponent(q)}`)
       const data = await res.json()
-      console.log('[CityPicker] results:', data.features?.length)
       suggestions = data.features.map(f => ({
         city: f.properties.name,
         country: f.properties.country || '',
@@ -41,7 +39,6 @@
   }
 
   function onInput(e) {
-    console.log('[CityPicker] onInput:', e.target.value)
     query = e.target.value
     // clear selected value when user types/clears input
     value = ''

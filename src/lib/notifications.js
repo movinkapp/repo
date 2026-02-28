@@ -1,6 +1,6 @@
 import { supabase } from '$lib/supabase.js'
 
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || ''
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -11,6 +11,9 @@ function urlBase64ToUint8Array(base64String) {
 
 export async function requestNotificationPermission() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return { ok: false, reason: 'not_supported' }
+  }
+  if (!VAPID_PUBLIC_KEY) {
     return { ok: false, reason: 'not_supported' }
   }
 
@@ -31,7 +34,15 @@ export async function requestNotificationPermission() {
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     })
 
-    const { data: { user } } = await supabase.auth.getUser()
+    let user
+    try {
+      const { data } = await supabase.auth.getUser()
+      user = data.user
+    } catch (e) {
+      return { ok: false, reason: 'error' }
+    }
+
+    if (!user) return { ok: false, reason: 'error' }
 
     const { error } = await supabase.from('push_subscriptions').upsert({
       user_id: user.id,

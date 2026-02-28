@@ -117,9 +117,13 @@
     currency = profileRes.data?.base_currency || 'EUR'
 
     if (currency !== 'EUR') {
-      const res = await fetch(`https://api.frankfurter.app/latest?from=EUR&to=${currency}`)
-      const data = await res.json()
-      baseRate = data.rates[currency] || 1
+      try {
+        const res = await fetch(`https://api.frankfurter.app/latest?from=EUR&to=${currency}`)
+        const data = await res.json()
+        baseRate = data.rates[currency] || 1
+      } catch (e) {
+        baseRate = 1
+      }
     } else {
       baseRate = 1
     }

@@ -27,9 +27,13 @@
 
   async function getExchangeRate(currency) {
     if (currency === 'EUR') return 1.0
-    const res = await fetch(`https://api.frankfurter.app/latest?from=EUR&to=${currency}`)
-    const data = await res.json()
-    return data.rates[currency]
+    try {
+      const res = await fetch(`https://api.frankfurter.app/latest?from=EUR&to=${currency}`)
+      const data = await res.json()
+      return data.rates[currency] || 1.0
+    } catch (e) {
+      return 1.0
+    }
   }
 
   async function handleSubmit() {
