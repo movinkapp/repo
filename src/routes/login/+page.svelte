@@ -13,6 +13,8 @@
   let mode = 'login'
   let showPassword = false
 
+  let resetSent = false
+
   async function handleSubmit() {
     loading = true
     error = ''
@@ -43,6 +45,23 @@
     }
 
     loading = false
+  }
+
+  async function handleReset() {
+    if (!email) {
+      toast('Enter your email first.', 'error')
+      return
+    }
+    loading = true
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset`
+    })
+    loading = false
+    if (err) {
+      toast(err.message, 'error')
+    } else {
+      resetSent = true
+    }
   }
 </script>
 
@@ -122,14 +141,42 @@
         {loading ? '···' : mode === 'login' ? "Let's go" : 'Join Movink'}
       </button>
 
-      <button class="btn-ghost" onclick={() => { mode = mode === 'login' ? 'register' : 'login'; error = '' }}>
-        {mode === 'login' ? 'First time? Join Movink' : 'Already have an account? Sign in'}
-      </button>
+      {#if resetSent}
+        <p class="reset-msg">Check your inbox — we sent a password reset link.</p>
+      {:else}
+        {#if mode === 'login'}
+          <button class="btn-ghost-sm" onclick={handleReset} disabled={loading}>
+            Forgot password?
+          </button>
+        {/if}
+        <button class="btn-ghost" onclick={() => { mode = mode === 'login' ? 'register' : 'login'; error = '' }}>
+          {mode === 'login' ? 'First time? Join Movink' : 'Already have an account? Sign in'}
+        </button>
+      {/if}
     </div>
   {/if}
 </div>
 
 <style>
+    .btn-ghost-sm {
+      background: none;
+      border: none;
+      color: var(--text-3);
+      font-family: var(--font-body);
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      padding: 6px 10px;
+      transition: color 0.2s;
+    }
+
+    .reset-msg {
+      font-size: 13px;
+      color: var(--text-3);
+      text-align: center;
+      padding: 6px 2px;
+      line-height: 1.5;
+    }
   .container {
     min-height: 100vh;
     display: flex;

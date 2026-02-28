@@ -117,7 +117,7 @@
 {#if showCurrencyModal}
   <button
     class="overlay"
-    onclick={() => saveCurrencyAndFinish()}
+    onclick={() => showCurrencyModal = false}
     aria-label="Close modal"
     transition:fadeSlide={{ duration: 200, y: 0 }}
   ></button>

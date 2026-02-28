@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/stores'
   import { supabase } from '$lib/supabase.js'
-  import { toast } from '$lib/toast.js'
+  import { toast, toastConfirm } from '$lib/toast.js'
   import { onMount } from 'svelte'
   import { currencySymbols, formatAmount, fadeSlide } from '$lib/utils.js'
 
@@ -85,12 +85,14 @@
     saving = false
   }
 
-  async function deleteSimulation(id) {
-    const { error } = await supabase.from('simulations').delete().eq('id', id)
-    if (!error) {
-      simulations = simulations.filter(s => s.id !== id)
-      toast('Simulation deleted')
-    }
+  function deleteSimulation(id) {
+    toastConfirm('Delete this simulation?', async () => {
+      const { error } = await supabase.from('simulations').delete().eq('id', id)
+      if (!error) {
+        simulations = simulations.filter(s => s.id !== id)
+        toast('Simulation deleted')
+      }
+    })
   }
 
   $: netProfit = (artistKeeps * (Number(num_days) || 0)) - totalCosts
