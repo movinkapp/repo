@@ -4,15 +4,29 @@
   import { supabase } from '$lib/supabase.js'
 
   onMount(async () => {
-    // Redirect installed PWA users straight to the app
-    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-      goto('/home')
-      return
+    // Prefer server-validated session for deciding initial PWA redirect
+    let serverAuth = null
+    try {
+      const res = await fetch('/api/session')
+      if (res.ok) {
+        const json = await res.json()
+        serverAuth = json.authenticated
+      }
+    } catch (e) {
+      // network error — fall back to client session below
     }
 
-    // Redirect installed PWA users straight to the app
-    // (keep landing accessible to logged-in users; layout handles login redirects)
-    const { data: { session } } = await supabase.auth.getSession()
+    // If opened as an installed PWA, send user to the appropriate app route
+    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+      if (serverAuth === null) {
+        // server check failed — fall back to client-side session
+        const { data: { session } } = await supabase.auth.getSession()
+        goto(session ? '/home' : '/login')
+      } else {
+        goto(serverAuth ? '/home' : '/login')
+      }
+      return
+    }
     // ── CANVAS — ink trail diagonal ─────────────────────────────────
     const canvas = document.getElementById('inkCanvas')
     if (!canvas) return
