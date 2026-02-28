@@ -20,7 +20,7 @@
       return
     }
 
-    if (session && pathname === '/login') {
+    if (session && (pathname === '/login' || pathname === '/')) {
       goto('/home')
       authChecked = true
       return
@@ -43,7 +43,7 @@
     authChecked = true
   })
 
-  $: isLogin = $page.url.pathname === '/' || $page.url.pathname === '/login' || $page.url.pathname === '/onboarding'
+  $: isLogin = ['/', '/login', '/onboarding', '/auth/confirmed'].includes($page.url.pathname)
 </script>
 
 {#if authChecked}

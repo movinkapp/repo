@@ -16,7 +16,7 @@
         console.error('getSessionFromUrl error', error)
         return
       }
-      const next = $page.url.searchParams.get('next') || '/'
+      const next = $page.url.searchParams.get('next') || '/onboarding'
       status = 'Email confirmed — redirecting...'
       setTimeout(() => goto(next), 800)
     } catch (e) {

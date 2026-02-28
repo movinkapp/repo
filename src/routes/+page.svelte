@@ -1,7 +1,21 @@
 <script>
   import { onMount } from 'svelte'
+  import { goto } from '$app/navigation'
+  import { supabase } from '$lib/supabase.js'
 
-  onMount(() => {
+  onMount(async () => {
+    // Redirect installed PWA users straight to the app
+    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+      goto('/home')
+      return
+    }
+
+    // Redirect logged-in users away from landing
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      goto('/home')
+      return
+    }
     // ── CANVAS — ink trail diagonal ─────────────────────────────────
     const canvas = document.getElementById('inkCanvas')
     if (!canvas) return
