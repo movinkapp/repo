@@ -1,83 +1,42 @@
 <script>
   import '../app.css'
-  import { supabase } from '$lib/supabase.js'
-  import { goto } from '$app/navigation'
-  import { onMount } from 'svelte'
   import { fade } from 'svelte/transition'
   import { navigating, page } from '$app/stores'
   import { Home, MapPin, Calculator, User } from 'lucide-svelte'
   import Toast from '$lib/components/Toast.svelte'
 
-  let authChecked = false
-
-  onMount(async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    const pathname = window.location.pathname
-
-    if (!session) {
-      if (pathname !== '/login' && pathname !== '/') goto('/login')
-      authChecked = true
-      return
-    }
-
-    if (session && pathname === '/login') {
-      goto('/home')
-      authChecked = true
-      return
-    }
-
-    // don't force onboarding when user is on the public landing ('/')
-    if (pathname !== '/onboarding' && pathname !== '/') {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('onboarding_completed')
-        .eq('id', session.user.id)
-        .single()
-
-      if (profile && !profile.onboarding_completed) {
-        goto('/onboarding')
-        authChecked = true
-        return
-      }
-    }
-
-    authChecked = true
-  })
-
   $: isLogin = ['/', '/login', '/onboarding', '/auth/confirmed'].includes($page.url.pathname)
 </script>
 
-{#if authChecked}
-  {#key $navigating?.to?.url.pathname}
-    <div in:fade={{ duration: 150, delay: 50 }}>
-      <slot />
-      <Toast />
-    </div>
-  {/key}
+{#key $navigating?.to?.url.pathname}
+  <div in:fade={{ duration: 150, delay: 50 }}>
+    <slot />
+    <Toast />
+  </div>
+{/key}
 
-  {#if !isLogin}
-    <nav class="bottom-nav">
-      <a href="/home" class:active={$page.url.pathname === '/home'}>
-        <Home size={22} strokeWidth={1.5} />
-        <span>Home</span>
-      </a>
+{#if !isLogin}
+  <nav class="bottom-nav">
+    <a href="/home" class:active={$page.url.pathname === '/home'}>
+      <Home size={22} strokeWidth={1.5} />
+      <span>Home</span>
+    </a>
 
-      <a href="/spots" class:active={$page.url.pathname.startsWith('/spots')}>
-        <MapPin size={22} strokeWidth={1.5} />
-        <span>Spots</span>
-      </a>
+    <a href="/spots" class:active={$page.url.pathname.startsWith('/spots')}>
+      <MapPin size={22} strokeWidth={1.5} />
+      <span>Spots</span>
+    </a>
 
-      <a href="/calculator" class:active={$page.url.pathname === '/calculator'}>
-        <Calculator size={22} strokeWidth={1.5} />
-        <span>Calculate</span>
-      </a>
+    <a href="/calculator" class:active={$page.url.pathname === '/calculator'}>
+      <Calculator size={22} strokeWidth={1.5} />
+      <span>Calculate</span>
+    </a>
 
-      <a href="/profile" class:active={$page.url.pathname === '/profile'}>
-        <User size={22} strokeWidth={1.5} />
-        <span>Profile</span>
-      </a>
-    </nav>
-  {/if}
+    <a href="/profile" class:active={$page.url.pathname === '/profile'}>
+      <User size={22} strokeWidth={1.5} />
+      <span>Profile</span>
+    </a>
+  </nav>
 {/if}
 
 <style>
