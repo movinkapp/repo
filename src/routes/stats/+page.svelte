@@ -11,6 +11,7 @@
   let loading = true
   let baseRate = 1
   let activeBar = null
+  let converting = false
 
   const currentYear = new Date().getFullYear()
   let selectedYear = currentYear
@@ -114,16 +115,19 @@
     spots = spotsRes.data || []
     sessions = sessionsRes.data || []
     costs = costsRes.data || []
-    currency = profileRes.data?.base_currency || 'EUR'
+    const baseCurrency = profileRes.data?.base_currency || 'EUR'
+    currency = baseCurrency
 
-    if (currency !== 'EUR') {
+    if (baseCurrency !== 'EUR') {
+      converting = true
       try {
-        const res = await fetch(`https://api.frankfurter.app/latest?from=EUR&to=${currency}`)
+        const res = await fetch(`https://frankfurter.app/latest?from=EUR&to=${baseCurrency}`)
         const data = await res.json()
-        baseRate = data.rates[currency] || 1
-      } catch (e) {
+        baseRate = data.rates?.[baseCurrency] || 1
+      } catch {
         baseRate = 1
       }
+      converting = false
     } else {
       baseRate = 1
     }
@@ -160,95 +164,97 @@
     <div class="loading" transition:fade>···</div>
   {:else}
 
-    <!-- NET PROFIT — destaque -->
-    <div class="net-card {netProfit >= 0 ? 'positive' : 'negative'}">
-      <p class="net-label">NET PROFIT</p>
-      <p class="net-value">{formatAmount(netProfit, currency)} <span class="net-currency">{currency}</span></p>
-      {#if keepRate !== null}
-        <p class="net-sub">
-          {#if netProfit >= 0}
-            You kept {keepRate}% of what you made
-          {:else}
-            Costs exceeded earnings by {Math.abs(keepRate)}%
-          {/if}
-        </p>
-      {:else}
-        <p class="net-sub">No earnings recorded yet</p>
-      {/if}
-    </div>
+    {#if converting}
+      <p class="converting-msg">Converting currencies···</p>
+    {:else}
 
-    <!-- GROSS + COSTS -->
-    <div class="row-2">
-      <div class="stat-card">
-        <p class="stat-label">GROSS</p>
-        <p class="stat-value">{formatAmount(totalGross, currency)}</p>
-        <p class="stat-currency">{currency}</p>
-      </div>
-      <div class="stat-card muted">
-        <p class="stat-label">COSTS</p>
-        <p class="stat-value">{formatAmount(totalCostsYear, currency)}</p>
-        <p class="stat-currency">{currency}</p>
-      </div>
-    </div>
-
-    <!-- ACTIVIDADE -->
-    <div class="row-3">
-      <div class="mini-card">
-        <p class="mini-value">{yearSpots.length}</p>
-        <p class="mini-label">SPOTS</p>
-      </div>
-      <div class="mini-card">
-        <p class="mini-value">{totalCountries}</p>
-        <p class="mini-label">COUNTRIES</p>
-      </div>
-      <div class="mini-card">
-        <p class="mini-value">{yearSessions.length}</p>
-        <p class="mini-label">SESSIONS</p>
-      </div>
-    </div>
-
-    <!-- GRÁFICO -->
-    <div class="chart-section">
-      <p class="section-label">Net profit by month</p>
-      <div class="chart-card">
-        {#if monthlyData.every(m => m.net === 0)}
-          <p class="chart-empty">No data for {selectedYear} yet.</p>
+      <div class="net-card {netProfit >= 0 ? 'positive' : 'negative'}">
+        <p class="net-label">NET PROFIT</p>
+        <p class="net-value">{formatAmount(netProfit, currency)} <span class="net-currency">{currency}</span></p>
+        {#if keepRate !== null}
+          <p class="net-sub">
+            {#if netProfit >= 0}
+              You kept {keepRate}% of what you made
+            {:else}
+              Costs exceeded earnings by {Math.abs(keepRate)}%
+            {/if}
+          </p>
         {:else}
-          <div class="chart-inner">
-            <div class="bars">
-              {#each monthlyData as month, i}
-                <button type="button" class="bar-col" onclick={() => activeBar = activeBar === i ? null : i}>
-                  <div class="bar-area">
-                    {#if month.net > 0}
-                      <div class="bar bar-pos" style="height:{barH(month.net)}px"></div>
-                    {:else if month.net < 0}
-                      <div class="bar bar-neg" style="height:{barH(month.net)}px"></div>
-                    {:else}
-                      <div class="bar-zero"></div>
-                    {/if}
-                  </div>
-                  <p class="bar-label" class:bar-label-active={activeBar === i}>{month.name}</p>
-                </button>
-              {/each}
+          <p class="net-sub">No earnings recorded yet</p>
+        {/if}
+      </div>
+
+      <div class="row-2">
+        <div class="stat-card">
+          <p class="stat-label">GROSS</p>
+          <p class="stat-value">{formatAmount(totalGross, currency)}</p>
+          <p class="stat-currency">{currency}</p>
+        </div>
+        <div class="stat-card muted">
+          <p class="stat-label">COSTS</p>
+          <p class="stat-value">{formatAmount(totalCostsYear, currency)}</p>
+          <p class="stat-currency">{currency}</p>
+        </div>
+      </div>
+
+      <div class="row-3">
+        <div class="mini-card">
+          <p class="mini-value">{yearSpots.length}</p>
+          <p class="mini-label">SPOTS</p>
+        </div>
+        <div class="mini-card">
+          <p class="mini-value">{totalCountries}</p>
+          <p class="mini-label">COUNTRIES</p>
+        </div>
+        <div class="mini-card">
+          <p class="mini-value">{yearSessions.length}</p>
+          <p class="mini-label">SESSIONS</p>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <p class="section-label">Net profit by month</p>
+        <div class="chart-card">
+          {#if monthlyData.every(m => m.net === 0)}
+            <p class="chart-empty">No data for {selectedYear} yet.</p>
+          {:else}
+            <div class="chart-inner">
+              <div class="bars">
+                {#each monthlyData as month, i}
+                  <button type="button" class="bar-col" onclick={() => activeBar = activeBar === i ? null : i}>
+                    <div class="bar-area">
+                      {#if month.net > 0}
+                        <div class="bar bar-pos" style="height:{barH(month.net)}px"></div>
+                      {:else if month.net < 0}
+                        <div class="bar bar-neg" style="height:{barH(month.net)}px"></div>
+                      {:else}
+                        <div class="bar-zero"></div>
+                      {/if}
+                    </div>
+                    <p class="bar-label" class:bar-label-active={activeBar === i}>{month.name}</p>
+                  </button>
+                {/each}
+              </div>
+              <div class="baseline"></div>
             </div>
-            <div class="baseline"></div>
+          {/if}
+        </div>
+
+        {#if activeBar !== null}
+          <div class="bar-tooltip" transition:fade={{ duration: 150 }}>
+            <p class="tooltip-month">{monthlyData[activeBar].name}</p>
+            <div class="tooltip-row">
+              <span class="tooltip-gross">↑ {formatAmount(monthlyData[activeBar].gross, currency)} {currency}</span>
+              <span class="tooltip-costs">↓ {formatAmount(monthlyData[activeBar].costs, currency)} {currency}</span>
+            </div>
+            <p class="tooltip-net {monthlyData[activeBar].net >= 0 ? 'pos' : 'neg'}">
+              {monthlyData[activeBar].net >= 0 ? '+' : ''}{formatAmount(monthlyData[activeBar].net, currency)} {currency}
+            </p>
           </div>
         {/if}
       </div>
 
-    {#if activeBar !== null}
-      <div class="bar-tooltip" transition:fade={{ duration: 150 }}>
-        <p class="tooltip-month">{monthlyData[activeBar].name}</p>
-        <div class="tooltip-row">
-          <span class="tooltip-gross">↑ {formatAmount(monthlyData[activeBar].gross, currency)} {currency}</span>
-          <span class="tooltip-costs">↓ {formatAmount(monthlyData[activeBar].costs, currency)} {currency}</span>
-        </div>
-        <p class="tooltip-net {monthlyData[activeBar].net >= 0 ? 'pos' : 'neg'}">
-          {monthlyData[activeBar].net >= 0 ? '+' : ''}{formatAmount(monthlyData[activeBar].net, currency)} {currency}
-        </p>
-      </div>
     {/if}
-    </div>
 
   {/if}
 </div>
@@ -615,4 +621,11 @@
 
   .tooltip-net.pos { color: var(--upcoming); }
   .tooltip-net.neg { color: var(--error); }
+
+  .converting-msg {
+    font-size: 13px;
+    color: var(--text-3);
+    letter-spacing: 1px;
+    padding: 8px 0;
+  }
 </style>

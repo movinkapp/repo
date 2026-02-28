@@ -148,17 +148,16 @@
     </div>
 
     <div class="section">
-      <a href="/stats" class="card-cta">
-        <div class="cta-header">
-          <BarChart2 size={16} strokeWidth={1.5} />
-          <p class="cta-label">Analytics</p>
-        </div>
-        <p class="cta-title">How's your year going?</p>
-        <p class="cta-hint">Earnings, costs and net profit by year →</p>
-      </a>
-    </div>
-
-      <div class="section">
+      <p class="section-label">Explore</p>
+      <div class="explore-stack">
+        <a href="/stats" class="card-cta">
+          <div class="cta-header">
+            <BarChart2 size={16} strokeWidth={1.5} />
+            <p class="cta-label">Analytics</p>
+          </div>
+          <p class="cta-title">How's your year going?</p>
+          <p class="cta-hint">Earnings, costs and net profit by year →</p>
+        </a>
         <a href="/community" class="card-cta">
           <div class="cta-header">
             <Users size={16} strokeWidth={1.5} />
@@ -168,6 +167,7 @@
           <p class="cta-hint">See other artists doing guest spots near you →</p>
         </a>
       </div>
+    </div>
 
     <div class="section">
       <p class="section-label">Preferences</p>
@@ -203,6 +203,7 @@
           </button>
         {/if}
       </div>
+      <p class="setting-hint">Get reminded 7 days before your flight, 3 days before your spot starts, and 1 day before with your checklist status.</p>
     </div>
 
     <div class="section">
@@ -290,7 +291,7 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    margin-bottom: 40px;
+    margin-bottom: 32px;
   }
 
   .avatar {
@@ -318,7 +319,7 @@
 
   .email { font-size: 13px; color: var(--text-2); }
 
-  .section { margin-bottom: 28px; }
+  .section { margin-bottom: 24px; }
 
   .section-label {
     font-size: 11px;
@@ -326,7 +327,7 @@
     letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--text-3);
-    margin-bottom: 6px;
+    margin-bottom: 10px;
   }
 
   .menu {
@@ -550,7 +551,15 @@
     font-size: 12px;
     color: var(--text-3);
     margin-top: 8px;
-    padding: 0 4px;
-    line-height: 1.6;
+    padding: 0;
+    line-height: 1.5;
+  }
+
+  .setting-hint {
+    font-size: 12px;
+    color: var(--text-3);
+    line-height: 1.5;
+    margin-top: 8px;
+    padding: 0;
   }
 </style>

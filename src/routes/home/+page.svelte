@@ -96,8 +96,8 @@
       {:else}
         <a href="/spots/new" class="stat-card stat-empty">
           <p class="stat-value">—</p>
-          <p class="stat-label">No spots</p>
-          <p class="stat-sub">Plan one →</p>
+          <p class="stat-label">No spots yet</p>
+          <p class="stat-sub">Plan your first →</p>
         </a>
       {/if}
 
@@ -112,6 +112,13 @@
         <p class="stat-label">Sessions ahead</p>
       </div>
     </div>
+
+    {#if spots.length === 0}
+      <div class="first-spot-hint">
+        <p>Add your first guest spot to start tracking sessions, costs and earnings.</p>
+        <a href="/spots/new" class="btn-first-spot">Plan a spot</a>
+      </div>
+    {/if}
 
     <div class="section">
       <a href="/calculator" class="card-cta">
@@ -412,4 +419,37 @@
   }
 
   .btn-primary-sheet:active { opacity: 0.8; }
+
+  .first-spot-hint {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .first-spot-hint p {
+    font-size: 14px;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  .btn-first-spot {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .btn-first-spot:active { opacity: 0.8; }
 </style>

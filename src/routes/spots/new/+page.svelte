@@ -55,12 +55,12 @@
     const { data: { user } } = await supabase.auth.getUser()
     const exchange_rate = await getExchangeRate(currency)
 
-    const { error: err } = await supabase.from('spots').insert({
+    const { data: newSpot, error: err } = await supabase.from('spots').insert({
       user_id: user.id,
       studio_name,
       city,
       country,
-      city_normalized: city,
+      city_normalized: city.toLowerCase().trim(),
       country_code: '',
       lat: city_lat,
       lon: city_lon,
@@ -72,14 +72,14 @@
       base_currency: 'EUR',
       exchange_rate,
       notes
-    })
+    }).select().single()
 
     if (err) {
       error = err.message
       toast(err.message, 'error')
     } else {
       toast('Spot created')
-      goto('/spots')
+      goto(`/spots/${newSpot.id}`)
     }
 
     loading = false
