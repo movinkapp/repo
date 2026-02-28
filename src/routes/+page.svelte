@@ -307,23 +307,23 @@
       <div class="card-inner">
         <div class="ci-header">
           <div>
-            <p class="ci-studio">Studio Irezumi</p>
+            <p class="ci-studio">Sang Bleu London</p>
             <p class="ci-location">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              Tokyo, JP
+              London, UK
             </p>
           </div>
           <span class="ci-badge">● Active</span>
         </div>
-        <p class="ci-dates">12 – 18 March</p>
+        <p class="ci-dates">3 – 9 April</p>
         <div class="ci-sessions">
-          <div class="ci-sess"><span>Mar 13</span><span class="cv">¥ 18,000</span></div>
-          <div class="ci-sess"><span>Mar 14</span><span class="cv">¥ 22,000</span></div>
-          <div class="ci-sess"><span>Mar 15</span><span class="cv">¥ 14,000</span></div>
+          <div class="ci-sess"><span>Apr 4</span><span class="cv">£ 320</span></div>
+          <div class="ci-sess"><span>Apr 5</span><span class="cv">£ 480</span></div>
+          <div class="ci-sess"><span>Apr 7</span><span class="cv">£ 400</span></div>
         </div>
         <div class="ci-net">
           <span class="ci-net-label">Net profit</span>
-          <span class="ci-net-val">¥ 28,800</span>
+          <span class="ci-net-val">£ 820</span>
         </div>
       </div>
     </div>
@@ -349,23 +349,23 @@
         <div class="calc-rows">
           <div class="calc-row">
             <span class="cr-label">Gross earnings</span>
-            <span class="cr-val">¥ 48,000</span>
+            <span class="cr-val">€ 2,800</span>
           </div>
           <div class="calc-row dim">
-            <span class="cr-label">Studio cut 30%</span>
-            <span class="cr-val">−¥ 14,400</span>
+            <span class="cr-label">Studio cut 35%</span>
+            <span class="cr-val">−€ 980</span>
           </div>
           <div class="calc-row dim">
             <span class="cr-label">Trip costs</span>
-            <span class="cr-val">−¥ 4,800</span>
+            <span class="cr-val">−€ 320</span>
           </div>
           <div class="calc-divider"></div>
           <div class="calc-row net">
             <span class="cr-label">Net profit</span>
-            <span class="cr-net">¥ 28,800</span>
+            <span class="cr-net">€ 1,500</span>
           </div>
         </div>
-        <p class="calc-break">Break-even at <strong>3 sessions</strong></p>
+        <p class="calc-break">Break-even at <strong>2 sessions</strong></p>
       </div>
     </div>
   </div>
