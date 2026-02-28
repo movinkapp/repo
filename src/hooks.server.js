@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from '@supabase/auth-helpers-sveltekit'
 import { redirect } from '@sveltejs/kit'
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public'
 
 const PUBLIC_PATHS = ['/', '/login', '/auth/confirmed', '/onboarding']
 
@@ -11,7 +12,7 @@ export const handle = async ({ event, resolve }) => {
     return await resolve(event)
   }
 
-  const supabase = createSupabaseServerClient(event)
+  const supabase = createSupabaseServerClient({ supabaseUrl: PUBLIC_SUPABASE_URL, supabaseKey: PUBLIC_SUPABASE_ANON_KEY }, event)
   const { data: { session } } = await supabase.auth.getSession()
 
   // expose session to the app
