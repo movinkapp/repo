@@ -31,10 +31,6 @@
 </svelte:head>
 
 <div class="page">
-  <a href="/" class="wordmark">
-    <span class="wm-mov">MOV</span><span class="wm-ink">INK</span>
-  </a>
-
   {#if state === 'success'}
     <div class="box">
       <p class="tag">You're on the list.</p>
@@ -79,20 +75,6 @@
     padding: 48px 24px;
     position: relative;
   }
-
-  .wordmark {
-    position: fixed;
-    top: 24px;
-    left: 32px;
-    font-family: var(--font-display);
-    font-size: 20px;
-    letter-spacing: -1px;
-    color: var(--text);
-    text-decoration: none;
-  }
-
-  .wm-mov { font-weight: 800; }
-  .wm-ink { font-weight: 200; }
 
   .box {
     max-width: 420px;
