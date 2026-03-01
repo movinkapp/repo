@@ -29,10 +29,20 @@ export async function requestNotificationPermission() {
     const existing = await reg.pushManager.getSubscription()
     if (existing) await existing.unsubscribe()
 
-    const subscription = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    })
+    let subscription = null
+    let attempts = 0
+    while (!subscription && attempts < 3) {
+      try {
+        subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        })
+      } catch (e) {
+        attempts++
+        if (attempts >= 3) throw e
+        await new Promise(r => setTimeout(r, 800))
+      }
+    }
 
     let user
     try {
