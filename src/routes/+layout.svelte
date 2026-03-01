@@ -5,7 +5,7 @@
   import { Home, MapPin, Calculator, User } from 'lucide-svelte'
   import Toast from '$lib/components/Toast.svelte'
 
-  $: isLogin = ['/', '/login', '/onboarding', '/auth/confirmed', '/auth/reset'].includes($page.url.pathname)
+  $: isLogin = ['/', '/login', '/onboarding', '/auth/confirmed', '/auth/reset', '/waitlist'].includes($page.url.pathname)
 </script>
 
 {#key $navigating?.to?.url.pathname}
