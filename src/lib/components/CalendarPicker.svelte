@@ -5,6 +5,7 @@
   export let value = null
   export let spotStart = null
   export let spotEnd = null
+  export let bufferDays = 0
   export let markedDates = []
 
   // Range mode
@@ -56,7 +57,13 @@
 
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-      const isInRange = (!spotStart || dateStr >= spotStart) && (!spotEnd || dateStr <= spotEnd)
+      let effectiveStart = spotStart
+      if (spotStart && bufferDays > 0) {
+        const d = new Date(spotStart + 'T12:00:00')
+        d.setDate(d.getDate() - bufferDays)
+        effectiveStart = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      }
+      const isInRange = (!effectiveStart || dateStr >= effectiveStart) && (!spotEnd || dateStr <= spotEnd)
       const isMarked = markedDates.includes(dateStr)
       const isSelected = !rangeMode && value && toStr(value) === dateStr
       const isToday = toStr(new Date()) === dateStr

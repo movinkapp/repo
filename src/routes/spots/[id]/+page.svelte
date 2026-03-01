@@ -728,6 +728,7 @@
               bind:value={cost_date}
               spotStart={spot.start_date}
               spotEnd={spot.end_date}
+              bufferDays={14}
               markedDates={[]}
             />
           </div>
@@ -774,6 +775,7 @@
                   bind:value={edit_cost_date}
                   spotStart={spot.start_date}
                   spotEnd={spot.end_date}
+                  bufferDays={14}
                   markedDates={[]}
                 />
               </div>
