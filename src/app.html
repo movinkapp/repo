@@ -8,16 +8,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Movink" />
     <meta name="description" content="Track your guest spots, sessions and earnings." />
-    <link rel="manifest" href="/manifest.json" />
-      <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">
     <div id="splash" style="position:fixed;inset:0;background:#111111;display:flex;align-items:center;justify-content:center;z-index:9999;pointer-events:none">
-      <span style="font-family:sans-serif;font-size:24px;letter-spacing:-1px;color:#f0f0f0">
-        <span style="font-weight:800">MOV</span><span style="font-weight:200;color:#ffffff">INK</span>
-      </span>
+      <img src="/movink-logo-typo-white.svg" alt="Movink" style="width:224px;height:auto" />
     </div>
     <script>
       document.addEventListener('DOMContentLoaded', function() {

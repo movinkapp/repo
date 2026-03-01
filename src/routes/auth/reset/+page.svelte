@@ -43,7 +43,7 @@
 <div class="container">
   <div class="header">
     <h1>
-      <span class="mov">MOV</span><span class="ink">INK</span>
+      <img src="/movink-logo-typo-white.svg" alt="Movink" style="height:28px;width:auto" />
     </h1>
     <p class="tagline">Set your new password.</p>
   </div>

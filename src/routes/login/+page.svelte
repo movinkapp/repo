@@ -68,7 +68,7 @@
 <div class="container">
   <div class="header">
     <h1>
-      <span class="mov">MOV</span><span class="ink">INK</span>
+      <img src="/movink-logo-typo-white.svg" alt="Movink" style="height:32px;width:auto" />
     </h1>
     {#if mode === 'login'}
       <p class="tagline" transition:fade={{ duration: 150 }}>

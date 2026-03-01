@@ -208,7 +208,7 @@
 <!-- ══ NAV ══════════════════════════════════════════════════════════ -->
 <header class="nav">
   <a href="/" class="wordmark">
-    <span class="wm-mov">MOV</span><span class="wm-ink">INK</span>
+    <img src="/movink-logo-typo-white.svg" alt="Movink" style="height:24px;width:auto" />
   </a>
   <nav class="nav-links">
     <a href="#features" class="nav-link">Features</a>
@@ -567,7 +567,7 @@
 
 <footer>
   <span class="footer-logo">
-    <span class="wm-mov">MOV</span><span class="wm-ink">INK</span>
+    <img src="/movink-logo-typo-white.svg" alt="Movink" style="height:28px;width:auto" />
   </span>
   <span class="footer-copy">© 2026 Movink · Made for the road</span>
 </footer>
@@ -642,10 +642,6 @@
     z-index: 1;
   }
 
-  /* ── WORDMARK (match login) ──────────────────────────────────────── */
-  .wm-mov { font-weight: 800; }
-  .wm-ink { font-weight: 200; }
-
   /* ── NAV ─────────────────────────────────────────────────────────── */
   .nav {
     position: fixed;
@@ -661,10 +657,8 @@
   }
 
   .wordmark {
-    font-family: var(--font-display);
-    font-size: 20px;
-    letter-spacing: -1px;
-    color: var(--text);
+    display: flex;
+    align-items: center;
   }
 
   .nav-links {
