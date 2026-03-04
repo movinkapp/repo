@@ -28,7 +28,7 @@
         goto('/home')
       }
     } else {
-      const { error: err } = await supabase.auth.signUp({
+      const { data, error: err } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -39,6 +39,8 @@
       if (err) {
         error = err.message
         toast(err.message, 'error')
+      } else if (data?.session) {
+        goto('/onboarding')
       } else {
         mode = 'check-email'
       }
@@ -195,10 +197,6 @@
     line-height: 1;
     margin-bottom: 10px;
   }
-
-  .mov { font-weight: 800; }
-  .ink { font-weight: 200; }
-
   .tagline {
     font-size: 14px;
     color: var(--text-2);
