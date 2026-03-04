@@ -2,7 +2,7 @@
   import { supabase } from '$lib/supabase.js'
   import { onMount } from 'svelte'
   import { fade } from 'svelte/transition'
-  import { ChevronLeft, Users } from 'lucide-svelte'
+  import { ChevronLeft, Users, Instagram } from 'lucide-svelte'
   import { getStatus } from '$lib/utils.js'
 
   let loading = true
@@ -128,7 +128,8 @@
                    target="_blank"
                    rel="noopener noreferrer"
                    class="ig-link">
-                  @{artist.instagram}
+                  <Instagram size={14} strokeWidth={1.8} class="ig-icon" />
+                  <span class="artist-username">@{artist.instagram}</span>
                 </a>
               {:else}
                 <span class="artist-anon">Anonymous artist</span>
@@ -219,11 +220,17 @@
   .artist-handle { font-size: 15px; font-weight: 600; }
 
   .ig-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: var(--text);
     text-decoration: none;
     transition: color 0.2s;
   }
   .ig-link:active { color: var(--text-2); }
+
+  :global(.ig-icon) { color: var(--active); }
+  .artist-username { font-weight: 700; }
 
   .artist-anon { color: var(--text-3); font-weight: 400; }
 
