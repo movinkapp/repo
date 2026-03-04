@@ -49,19 +49,23 @@
     windowEnd.setDate(windowEnd.getDate() + 14)
     const futureDate = windowEnd.toISOString().split('T')[0]
 
+    const cityLower = myCity.toLowerCase()
+
     // Find other artists visible in the same city (active or upcoming within 14 days)
-    const { data: spots } = await supabase
+    const { data: spots, error: spotsError } = await supabase
       .from('spots')
       .select(`
         id, city, city_normalized, studio_name, start_date, end_date,
         user_id,
         users!inner ( id, instagram, community_visible )
       `)
-      .or(`city_normalized.ilike.${myCity},city.ilike.${myCity}`)
+      .ilike('city_normalized', cityLower)
       .lte('start_date', futureDate)
       .gte('end_date', today)
       .neq('user_id', user.id)
       .eq('users.community_visible', true)
+
+    console.log('community spots:', spots, 'error:', spotsError)
 
     artists = (spots || []).map(s => ({
       instagram: s.users?.instagram || null,
