@@ -1,10 +1,18 @@
+import * as Sentry from '@sentry/sveltekit'
+
+Sentry.init({
+  dsn: 'https://6642ca695289af10fc355fef6738e10f@o4510983925792768.ingest.de.sentry.io/4510983930970192',
+  tracesSampleRate: 0.5,
+  environment: import.meta.env.MODE
+})
+
 import { createServerClient } from '@supabase/auth-helpers-sveltekit'
 import { redirect } from '@sveltejs/kit'
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public'
 
 const PUBLIC_PATHS = ['/', '/login', '/auth/confirmed', '/auth/reset', '/onboarding', '/waitlist']
 
-export const handle = async ({ event, resolve }) => {
+const originalHandle = async ({ event, resolve }) => {
   const path = event.url.pathname
 
   if (path.startsWith('/_app') || path.startsWith('/static') || path.startsWith('/favicon') || path.startsWith('/api')) {
@@ -55,3 +63,6 @@ export const handle = async ({ event, resolve }) => {
 
   return await resolve(event)
 }
+
+export const handle = Sentry.sentryHandle()
+export const handleError = Sentry.handleErrorWithSentry()
