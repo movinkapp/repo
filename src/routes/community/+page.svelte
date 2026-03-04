@@ -45,8 +45,11 @@
     }
 
     const today = new Date().toISOString().split('T')[0]
+    const windowEnd = new Date()
+    windowEnd.setDate(windowEnd.getDate() + 14)
+    const futureDate = windowEnd.toISOString().split('T')[0]
 
-    // Find other artists visible in the same city
+    // Find other artists visible in the same city (active or upcoming within 14 days)
     const { data: spots } = await supabase
       .from('spots')
       .select(`
@@ -55,7 +58,7 @@
         users!inner ( id, instagram, community_visible )
       `)
       .or(`city_normalized.ilike.${myCity},city.ilike.${myCity}`)
-      .lte('start_date', today)
+      .lte('start_date', futureDate)
       .gte('end_date', today)
       .neq('user_id', user.id)
       .eq('users.community_visible', true)
@@ -119,7 +122,7 @@
     </div>
 
   {:else}
-    <p class="city-label">Artists in {myCity} right now</p>
+            <p class="city-label">Artists in {myCity} now or soon</p>
     <div class="list" transition:fade>
       {#each artists as artist}
         <div class="artist-card">

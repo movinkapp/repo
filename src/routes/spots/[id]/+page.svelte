@@ -708,7 +708,7 @@
         <div class="field">
           <p class="field-label">Cost category</p>
           <div class="toggle four">
-            <button type="button" class:active={cost_type === 'flight'} onclick={() => cost_type = 'flight'}>Flight</button>
+            <button type="button" class:active={cost_type === 'flight'} onclick={() => cost_type = 'flight'}>Travel</button>
             <button type="button" class:active={cost_type === 'accommodation'} onclick={() => cost_type = 'accommodation'}>Stay</button>
             <button type="button" class:active={cost_type === 'food'} onclick={() => cost_type = 'food'}>Food</button>
             <button type="button" class:active={cost_type === 'other'} onclick={() => cost_type = 'other'}>Other</button>
@@ -756,7 +756,7 @@
             <div class="field">
               <p class="field-label">Cost category</p>
               <div class="toggle four">
-                <button type="button" class:active={edit_cost_type === 'flight'} onclick={() => edit_cost_type = 'flight'}>Flight</button>
+                <button type="button" class:active={edit_cost_type === 'flight'} onclick={() => edit_cost_type = 'flight'}>Travel</button>
                 <button type="button" class:active={edit_cost_type === 'accommodation'} onclick={() => edit_cost_type = 'accommodation'}>Stay</button>
                 <button type="button" class:active={edit_cost_type === 'food'} onclick={() => edit_cost_type = 'food'}>Food</button>
                 <button type="button" class:active={edit_cost_type === 'other'} onclick={() => edit_cost_type = 'other'}>Other</button>
