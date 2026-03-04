@@ -51,24 +51,16 @@
 
     const cityLower = myCity.toLowerCase()
 
-    // Find other artists visible in the same city (active or upcoming within 14 days)
-    const { data: spots, error: spotsError } = await supabase
-      .from('spots')
-      .select(`
-        id, city, city_normalized, studio_name, start_date, end_date,
-        user_id,
-        users!inner ( id, instagram, community_visible )
-      `)
+    // Find other artists visible in the same city via secure view
+    const { data: spots } = await supabase
+      .from('community_spots')
+      .select('id, city, city_normalized, studio_name, start_date, end_date, instagram')
       .ilike('city_normalized', cityLower)
       .lte('start_date', futureDate)
       .gte('end_date', today)
-      .neq('user_id', user.id)
-      .eq('users.community_visible', true)
-
-    console.log('community spots:', spots, 'error:', spotsError)
 
     artists = (spots || []).map(s => ({
-      instagram: s.users?.instagram || null,
+      instagram: s.instagram || null,
       studio: s.studio_name,
       city: s.city,
       start_date: s.start_date,
