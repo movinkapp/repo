@@ -20,6 +20,33 @@
   let modalOpen = false
   let nearbyCount = 0
 
+  async function loadNearbyCount(userId) {
+    const today = new Date().toISOString().split('T')[0]
+    const futureDate = new Date()
+    futureDate.setDate(futureDate.getDate() + 14)
+    const future = futureDate.toISOString().split('T')[0]
+
+    const { data: mySpots } = await supabase
+      .from('spots')
+      .select('city_normalized, city, start_date, end_date')
+      .eq('user_id', userId)
+
+    const { getStatus } = await import('$lib/utils.js')
+    const activeSpot = mySpots?.find(s => getStatus(s) === 'active')
+    const upcomingSpot = mySpots?.find(s => getStatus(s) === 'upcoming')
+    const refSpot = activeSpot || upcomingSpot
+    const myCity = refSpot?.city_normalized || refSpot?.city || null
+
+    if (!myCity) return
+
+    const { data: nearby } = await supabase.rpc('get_community_artists', {
+      p_city: myCity,
+      p_today: today,
+      p_future: future
+    })
+    nearbyCount = nearby?.length || 0
+  }
+
   const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
 
   onMount(async () => {
@@ -41,32 +68,8 @@
       notifPermission = Notification.permission
     }
 
-    // Load nearby artists count
     if (profile?.community_visible) {
-      const today = new Date().toISOString().split('T')[0]
-      const futureDate = new Date()
-      futureDate.setDate(futureDate.getDate() + 14)
-      const future = futureDate.toISOString().split('T')[0]
-
-      const { data: mySpots } = await supabase
-        .from('spots')
-        .select('city_normalized, city, start_date, end_date')
-        .eq('user_id', u.id)
-
-      const { getStatus } = await import('$lib/utils.js')
-      const activeSpot = mySpots?.find(s => getStatus(s) === 'active')
-      const upcomingSpot = mySpots?.find(s => getStatus(s) === 'upcoming')
-      const refSpot = activeSpot || upcomingSpot
-      const myCity = refSpot?.city_normalized || refSpot?.city || null
-
-      if (myCity) {
-        const { data: nearby } = await supabase.rpc('get_community_artists', {
-          p_city: myCity,
-          p_today: today,
-          p_future: future
-        })
-        nearbyCount = nearby?.length || 0
-      }
+      await loadNearbyCount(u.id)
     }
   })
 
@@ -94,6 +97,11 @@
       .update({ community_visible: communityVisible })
       .eq('id', user.id)
     toast(communityVisible ? 'You are now visible to other artists' : 'You are now hidden from the community')
+    if (communityVisible) {
+      await loadNearbyCount(user.id)
+    } else {
+      nearbyCount = 0
+    }
   }
 
   async function saveCurrency() {
