@@ -18,6 +18,7 @@
   let notifLoading = false
   let notifPermission = 'default'
   let modalOpen = false
+  let nearbyCount = 0
 
   const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
 
@@ -38,6 +39,34 @@
     notificationsEnabled = await isNotificationsEnabled()
     if (typeof Notification !== 'undefined') {
       notifPermission = Notification.permission
+    }
+
+    // Load nearby artists count
+    if (profile?.community_visible) {
+      const today = new Date().toISOString().split('T')[0]
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 14)
+      const future = futureDate.toISOString().split('T')[0]
+
+      const { data: mySpots } = await supabase
+        .from('spots')
+        .select('city_normalized, city, start_date, end_date')
+        .eq('user_id', u.id)
+
+      const { getStatus } = await import('$lib/utils.js')
+      const activeSpot = mySpots?.find(s => getStatus(s) === 'active')
+      const upcomingSpot = mySpots?.find(s => getStatus(s) === 'upcoming')
+      const refSpot = activeSpot || upcomingSpot
+      const myCity = refSpot?.city_normalized || refSpot?.city || null
+
+      if (myCity) {
+        const { data: nearby } = await supabase.rpc('get_community_artists', {
+          p_city: myCity,
+          p_today: today,
+          p_future: future
+        })
+        nearbyCount = nearby?.length || 0
+      }
     }
   })
 
@@ -162,6 +191,9 @@
           <div class="cta-header">
             <Users size={16} strokeWidth={1.5} />
             <p class="cta-label">Community</p>
+            {#if nearbyCount > 0}
+              <span class="nearby-badge">{nearbyCount} nearby</span>
+            {/if}
           </div>
           <p class="cta-title">Who's in your city?</p>
           <p class="cta-hint">See other artists doing guest spots near you →</p>
@@ -567,5 +599,16 @@
     line-height: 1.5;
     margin-top: 8px;
     padding: 0;
+  }
+
+  .nearby-badge {
+    margin-left: auto;
+    background: var(--upcoming);
+    color: var(--bg);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 20px;
   }
 </style>
