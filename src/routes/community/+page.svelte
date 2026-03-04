@@ -49,15 +49,11 @@
     windowEnd.setDate(windowEnd.getDate() + 14)
     const futureDate = windowEnd.toISOString().split('T')[0]
 
-    const cityLower = myCity.toLowerCase()
-
-    // Find other artists visible in the same city via secure view
-    const { data: spots } = await supabase
-      .from('community_spots')
-      .select('id, city, city_normalized, studio_name, start_date, end_date, instagram')
-      .ilike('city_normalized', cityLower)
-      .lte('start_date', futureDate)
-      .gte('end_date', today)
+    const { data: spots } = await supabase.rpc('get_community_artists', {
+      p_city: myCity,
+      p_today: today,
+      p_future: futureDate
+    })
 
     artists = (spots || []).map(s => ({
       instagram: s.instagram || null,
