@@ -470,6 +470,9 @@
   $: isDateLogged = (d) => d && sessionDates.includes(toLocalDateStr(d))
   $: totalArtist = sessions.reduce((sum, s) => sum + calcArtist(s), 0)
   $: totalCosts = costs.reduce((sum, c) => sum + Number(c.amount), 0)
+  $: studioFee = spot?.deal_type === 'flat_daily'
+    ? Math.ceil((new Date(spot.end_date) - new Date(spot.start_date)) / 86400000) * Number(spot.deal_value)
+    : null
   $: netProfit = totalArtist - totalCosts
   $: done = spot ? checklistItems.filter(i => spot[i.key]).length : 0
   
@@ -609,6 +612,12 @@
         <p class="summary-value-sm">{formatAmount(totalCosts, spot.currency)} <span class="currency">{spot.currency}</span></p>
       </div>
     </div>
+    {#if studioFee !== null}
+    <div class="summary-studio">
+      <p class="summary-label">STUDIO FEE</p>
+      <p class="summary-value-sm summary-studio-value">{formatAmount(studioFee, spot.currency)} <span class="currency">{spot.currency}</span></p>
+    </div>
+    {/if}
     <div class="summary-divider-h"></div>
     <div class="summary-net">
       <p class="summary-label">Net profit</p>
@@ -969,7 +978,7 @@
     letter-spacing: 4px;
   }
 
-  .page { padding: 56px 24px 100px; }
+  .page { padding: 56px 24px 100px; background: var(--surface-2); min-height: 100vh; }
 
   .header {
     display: flex;
@@ -1059,6 +1068,19 @@
     height: 1px;
     background: var(--border);
     margin-bottom: 16px;
+  }
+
+  .summary-studio {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+
+  .summary-studio-value {
+    color: var(--text-2);
   }
 
   .summary-label {
