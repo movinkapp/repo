@@ -1,21 +1,27 @@
 import * as Sentry from '@sentry/sveltekit'
-
-Sentry.init({
-  dsn: 'https://6642ca695289af10fc355fef6738e10f@o4510983925792768.ingest.de.sentry.io/4510983930970192',
-  tracesSampleRate: 0.5,
-  environment: import.meta.env.MODE
-})
-
+import { sequence } from '@sveltejs/kit/hooks'
 import { createServerClient } from '@supabase/auth-helpers-sveltekit'
 import { redirect } from '@sveltejs/kit'
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public'
+import { SENTRY_DSN } from '$env/static/private'
+
+Sentry.init({
+  dsn: SENTRY_DSN,
+  tracesSampleRate: 0.5,
+  environment: import.meta.env.MODE
+})
 
 const PUBLIC_PATHS = ['/', '/login', '/auth/confirmed', '/auth/reset', '/onboarding', '/waitlist']
 
 const originalHandle = async ({ event, resolve }) => {
   const path = event.url.pathname
 
-  if (path.startsWith('/_app') || path.startsWith('/static') || path.startsWith('/favicon') || path.startsWith('/api')) {
+  if (
+    path.startsWith('/_app') ||
+    path.startsWith('/static') ||
+    path.startsWith('/favicon') ||
+    path.startsWith('/api')
+  ) {
     return await resolve(event)
   }
 
@@ -27,7 +33,10 @@ const originalHandle = async ({ event, resolve }) => {
 
   let supabase
   try {
-    supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, { cookies, fetch: event.fetch })
+    supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+      cookies,
+      fetch: event.fetch
+    })
   } catch (e) {
     console.error('supabase createServerClient failed in hooks:', e)
     event.locals.session = null
@@ -64,5 +73,5 @@ const originalHandle = async ({ event, resolve }) => {
   return await resolve(event)
 }
 
-export const handle = Sentry.sentryHandle()
+export const handle = sequence(originalHandle, Sentry.sentryHandle())
 export const handleError = Sentry.handleErrorWithSentry()

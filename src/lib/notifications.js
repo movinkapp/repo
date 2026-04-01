@@ -77,11 +77,18 @@ export async function isNotificationsEnabled() {
 }
 
 export async function disableNotifications() {
-  const reg = await navigator.serviceWorker.getRegistration('/sw.js')
-  if (reg) {
-    const sub = await reg.pushManager.getSubscription()
-    if (sub) await sub.unsubscribe()
+  try {
+    const reg = await navigator.serviceWorker.getRegistration('/sw.js')
+    if (reg) {
+      const sub = await reg.pushManager.getSubscription()
+      if (sub) await sub.unsubscribe()
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) return
+
+    await supabase.from('push_subscriptions').delete().eq('user_id', user.id)
+  } catch (e) {
+    console.error('disableNotifications error:', e)
   }
-  const { data: { user } } = await supabase.auth.getUser()
-  await supabase.from('push_subscriptions').delete().eq('user_id', user.id)
 }

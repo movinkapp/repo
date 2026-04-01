@@ -104,13 +104,22 @@
     const id = $page.params.id
 
     const { data: spotData } = await supabase
-      .from('spots').select('*').eq('id', id).single()
+      .from('spots')
+      .select('id, user_id, studio_name, city, city_normalized, country, lat, lon, start_date, end_date, deal_type, deal_value, currency, notes, check_flight, check_accommodation, check_studio_address, check_clients_notified, check_deposits, check_gear, check_contract')
+      .eq('id', id)
+      .single()
 
     const { data: sessionsData } = await supabase
-      .from('sessions').select('*').eq('spot_id', id).order('date', { ascending: true })
+      .from('sessions')
+      .select('id, spot_id, date, status, session_type, value, deposit_received, deposit_value, payment_method, notes')
+      .eq('spot_id', id)
+      .order('date', { ascending: true })
 
     const { data: costsData } = await supabase
-      .from('costs').select('*').eq('spot_id', id).order('date', { ascending: true })
+      .from('costs')
+      .select('id, spot_id, type, amount, date, notes')
+      .eq('spot_id', id)
+      .order('date', { ascending: true })
 
     spot = spotData
     // ensure checklist boolean columns exist and are set to false if missing
@@ -137,14 +146,41 @@
   }
 
   async function addSession() {
+    sessionError = ''
+
+    if (!date) {
+      sessionError = 'Please select a date.'
+      return
+    }
+
+    const parsedValue = Number(value)
+    if (!value || isNaN(parsedValue) || parsedValue <= 0) {
+      sessionError = 'Please enter a valid session total.'
+      return
+    }
+
+    if (deposit_received) {
+      const parsedDeposit = Number(deposit_value)
+      if (!deposit_value || isNaN(parsedDeposit) || parsedDeposit <= 0) {
+        sessionError = 'Please enter a valid deposit amount.'
+        return
+      }
+      if (parsedDeposit > parsedValue) {
+        sessionError = 'Deposit cannot be greater than the session total.'
+        return
+      }
+    }
+
     const { error } = await supabase.from('sessions').insert({
       spot_id: $page.params.id,
-      date: date ? toLocalDateStr(date) : null,
-      status, session_type,
-      value: value || null,
+      date: toLocalDateStr(date),
+      status,
+      session_type,
+      value: parsedValue,
       deposit_received,
-      deposit_value: deposit_value || null,
-      payment_method, notes
+      deposit_value: deposit_received ? Number(deposit_value) : null,
+      payment_method,
+      notes: notes.trim() || null
     })
 
     if (error) {
@@ -153,9 +189,9 @@
       return
     }
 
-    sessionError = ''
     const { data } = await supabase
-      .from('sessions').select('*')
+      .from('sessions')
+      .select('id, spot_id, date, status, session_type, value, deposit_received, deposit_value, payment_method, notes')
       .eq('spot_id', $page.params.id)
       .order('date', { ascending: true })
     sessions = data
@@ -166,12 +202,25 @@
   }
 
   async function addCost() {
+    costError = ''
+
+    const parsedAmount = Number(cost_amount)
+    if (!cost_amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      costError = 'Please enter a valid amount.'
+      return
+    }
+
+    if (parsedAmount > 999999) {
+      costError = 'Amount seems too high. Please check.'
+      return
+    }
+
     const { error } = await supabase.from('costs').insert({
       spot_id: $page.params.id,
       type: cost_type,
-      amount: cost_amount,
+      amount: parsedAmount,
       date: cost_date ? toLocalDateStr(cost_date) : null,
-      notes: cost_notes
+      notes: cost_notes.trim() || null
     })
 
     if (error) {
@@ -180,9 +229,9 @@
       return
     }
 
-    costError = ''
     const { data } = await supabase
-      .from('costs').select('*')
+      .from('costs')
+      .select('id, spot_id, type, amount, date, notes')
       .eq('spot_id', $page.params.id)
       .order('date', { ascending: true })
     costs = data
@@ -211,15 +260,40 @@
   }
 
   async function saveEditSession(id) {
+    editSessionError = ''
+
+    if (!edit_date) {
+      editSessionError = 'Please select a date.'
+      return
+    }
+
+    const parsedValue = Number(edit_value)
+    if (!edit_value || isNaN(parsedValue) || parsedValue <= 0) {
+      editSessionError = 'Please enter a valid session total.'
+      return
+    }
+
+    if (edit_deposit_received) {
+      const parsedDeposit = Number(edit_deposit_value)
+      if (!edit_deposit_value || isNaN(parsedDeposit) || parsedDeposit <= 0) {
+        editSessionError = 'Please enter a valid deposit amount.'
+        return
+      }
+      if (parsedDeposit > parsedValue) {
+        editSessionError = 'Deposit cannot be greater than the session total.'
+        return
+      }
+    }
+
     const { error } = await supabase.from('sessions').update({
-      date: edit_date ? toLocalDateStr(edit_date) : null,
+      date: toLocalDateStr(edit_date),
       status: edit_status,
       session_type: edit_session_type,
-      value: edit_value || null,
+      value: parsedValue,
       deposit_received: edit_deposit_received,
-      deposit_value: edit_deposit_value || null,
+      deposit_value: edit_deposit_received ? Number(edit_deposit_value) : null,
       payment_method: edit_payment_method,
-      notes: edit_session_notes
+      notes: edit_session_notes.trim() || null
     }).eq('id', id)
 
     if (error) {
@@ -229,7 +303,8 @@
     }
 
     const { data } = await supabase
-      .from('sessions').select('*')
+      .from('sessions')
+      .select('id, spot_id, date, status, session_type, value, deposit_received, deposit_value, payment_method, notes')
       .eq('spot_id', $page.params.id)
       .order('date', { ascending: true })
     sessions = data
@@ -262,11 +337,24 @@
   }
 
   async function saveEditCost(id) {
+    editCostError = ''
+
+    const parsedAmount = Number(edit_cost_amount)
+    if (!edit_cost_amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      editCostError = 'Please enter a valid amount.'
+      return
+    }
+
+    if (parsedAmount > 999999) {
+      editCostError = 'Amount seems too high. Please check.'
+      return
+    }
+
     const { error } = await supabase.from('costs').update({
       type: edit_cost_type,
-      amount: edit_cost_amount,
+      amount: parsedAmount,
       date: edit_cost_date ? toLocalDateStr(edit_cost_date) : null,
-      notes: edit_cost_notes
+      notes: edit_cost_notes.trim() || null
     }).eq('id', id)
 
     if (error) {
@@ -276,7 +364,8 @@
     }
 
     const { data } = await supabase
-      .from('costs').select('*')
+      .from('costs')
+      .select('id, spot_id, type, amount, date, notes')
       .eq('spot_id', $page.params.id)
       .order('date', { ascending: true })
     costs = data
@@ -342,7 +431,11 @@
       return
     }
 
-    const { data } = await supabase.from('spots').select('*').eq('id', spot.id).single()
+    const { data } = await supabase
+      .from('spots')
+      .select('id, user_id, studio_name, city, city_normalized, country, lat, lon, start_date, end_date, deal_type, deal_value, currency, notes, check_flight, check_accommodation, check_studio_address, check_clients_notified, check_deposits, check_gear, check_contract')
+      .eq('id', spot.id)
+      .single()
     spot = data
     editingSpot = false
     savingSpot = false

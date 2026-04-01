@@ -1,5 +1,4 @@
 /// <reference path="./deno.d.ts" />
-
 import webpush from 'npm:web-push'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -7,6 +6,7 @@ const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const vapidPublic = Deno.env.get('VAPID_PUBLIC_KEY')!
 const vapidPrivate = Deno.env.get('VAPID_PRIVATE_KEY')!
 const vapidMailto = Deno.env.get('VAPID_MAILTO')!
+const functionSecret = Deno.env.get('FUNCTION_SECRET')!
 
 webpush.setVapidDetails(vapidMailto, vapidPublic, vapidPrivate)
 
@@ -22,10 +22,18 @@ async function db(path: string, options?: RequestInit) {
   })
 }
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  // Verifica o segredo antes de qualquer processamento
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader || authHeader !== `Bearer ${functionSecret}`) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
   const today = new Date().toISOString().split('T')[0]
 
-  // Busca todos os spots futuros/ativos com subscriptions ativas
   const spotsRes = await db(`spots?select=*,users!inner(id)&start_date=gte.${today}`)
   const spots = await spotsRes.json()
 
@@ -37,11 +45,9 @@ Deno.serve(async () => {
   for (const spot of spots) {
     const startDate = new Date(spot.start_date)
     const diffDays = Math.ceil((startDate.getTime() - Date.now()) / 86400000)
-
     const sub = subscriptions.find((s: { user_id: string }) => s.user_id === spot.user_id)
     if (!sub) continue
 
-    // D-7: voo
     if (diffDays === 7 && !spot.check_flight) {
       notifications.push({
         subscription: sub.subscription,
@@ -51,7 +57,6 @@ Deno.serve(async () => {
       })
     }
 
-    // D-3: sessões em falta
     if (diffDays === 3) {
       const sessionsRes = await db(`sessions?spot_id=eq.${spot.id}&select=id`)
       const sessions = await sessionsRes.json()
@@ -65,7 +70,6 @@ Deno.serve(async () => {
       }
     }
 
-    // D-1: checklist incompleto
     if (diffDays === 1) {
       const checklistKeys = [
         'check_flight', 'check_accommodation', 'check_studio_address',
@@ -83,13 +87,12 @@ Deno.serve(async () => {
     }
   }
 
-  // Envia todas as notificações
   const results = await Promise.allSettled(
     notifications.map(n =>
-        webpush.sendNotification(
-          n.subscription as any,
-          JSON.stringify({ title: n.title, body: n.body, url: n.url })
-        )
+      webpush.sendNotification(
+        n.subscription as any,
+        JSON.stringify({ title: n.title, body: n.body, url: n.url })
+      )
     )
   )
 
