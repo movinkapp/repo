@@ -12,6 +12,15 @@
   let debounceTimer = null
   let showDropdown = false
 
+  function countryFlag(countryCode) {
+    if (!countryCode || countryCode.length !== 2) return ''
+    return countryCode
+      .toUpperCase()
+      .split('')
+      .map(c => String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0)))
+      .join('')
+  }
+
   $: if (value && value !== query) {
     query = value
   }
@@ -24,6 +33,7 @@
       const data = await res.json()
       suggestions = data.features.map(f => ({
         city: f.properties.name,
+        state: f.properties.state || '',
         country: f.properties.country || '',
         country_code: (f.properties.countrycode || '').toUpperCase(),
         lat: f.geometry.coordinates[1],
@@ -86,8 +96,16 @@
     <div class="suggestions">
       {#each suggestions as s}
         <button type="button" class="suggestion" onmousedown={() => select(s)}>
-          <span class="s-city">{s.city}</span>
-          <span class="s-country">{s.country}</span>
+          <span class="s-left">
+            <span class="s-city">{s.city}</span>
+            {#if s.state && s.state !== s.city}
+              <span class="s-state">{s.state}</span>
+            {/if}
+          </span>
+          <span class="s-right">
+            <span class="s-flag">{countryFlag(s.country_code)}</span>
+            <span class="s-country">{s.country}</span>
+          </span>
         </button>
       {/each}
     </div>
@@ -153,16 +171,45 @@
   .suggestion:last-child { border-bottom: none; }
   .suggestion:active { background: var(--surface-2); }
 
+  .s-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
   .s-city {
     font-size: 14px;
     color: var(--text);
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .s-state {
+    font-size: 11px;
+    color: var(--text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .s-right {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .s-flag {
+    font-size: 14px;
+    line-height: 1;
   }
 
   .s-country {
     font-size: 12px;
     color: var(--text-3);
-    text-align: right;
-    flex-shrink: 0;
+    white-space: nowrap;
   }
 </style>

@@ -8,7 +8,7 @@ export async function GET({ url }) {
     })
   }
 
-  const upstream = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&layer=city`
+  const upstream = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&layer=city&lang=en`
   try {
     const res = await fetch(upstream)
     const text = await res.text()
