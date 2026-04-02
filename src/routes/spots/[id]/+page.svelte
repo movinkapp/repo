@@ -69,6 +69,59 @@
   let deposit_value = ''
   let payment_method = 'cash'
   let notes = ''
+  let client_name = ''
+  let project_image = null
+  let ref_images = []
+  let uploadingProjectImage = false
+  let uploadingRefImage = false
+
+  const CLOUD_NAME = import.meta.env.PUBLIC_CLOUDINARY_CLOUD_NAME
+  const UPLOAD_PRESET = import.meta.env.PUBLIC_CLOUDINARY_UPLOAD_PRESET
+
+  async function uploadToCloudinary(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', UPLOAD_PRESET)
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: 'POST',
+      body: formData
+    })
+    const data = await res.json()
+    if (!data.secure_url) throw new Error('Upload failed')
+    return data.secure_url
+  }
+
+  async function handleProjectImageUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    uploadingProjectImage = true
+    try {
+      project_image = await uploadToCloudinary(file)
+    } catch {
+      toast('Could not upload image. Try again.', 'error')
+    } finally {
+      uploadingProjectImage = false
+    }
+  }
+
+  async function handleRefImageUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (ref_images.length >= 3) { toast('Max 3 reference images.', 'error'); return }
+    uploadingRefImage = true
+    try {
+      const url = await uploadToCloudinary(file)
+      ref_images = [...ref_images, url]
+    } catch {
+      toast('Could not upload image. Try again.', 'error')
+    } finally {
+      uploadingRefImage = false
+    }
+  }
+
+  function removeRefImage(index) {
+    ref_images = ref_images.filter((_, i) => i !== index)
+  }
 
   // add cost fields
   let cost_type = 'flight'
@@ -180,7 +233,10 @@
       deposit_received,
       deposit_value: deposit_received ? Number(deposit_value) : null,
       payment_method,
-      notes: notes.trim() || null
+      notes: notes.trim() || null,
+      client_name: client_name.trim() || null,
+      project_image: project_image || null,
+      ref_images: ref_images.length > 0 ? ref_images : []
     })
 
     if (error) {
@@ -198,7 +254,7 @@
     toast('Session saved')
     showSessionForm = false
     date = null; value = ''; deposit_value = ''; notes = ''
-    deposit_received = false
+    deposit_received = false; client_name = ''; project_image = null; ref_images = []
   }
 
   async function addCost() {
@@ -621,7 +677,7 @@
     <div class="summary-divider-h"></div>
     <div class="summary-net">
       <p class="summary-label">Net profit</p>
-      <p class="summary-value-lg {netProfit >= 0 ? 'positive' : 'negative'}">
+      <p class="summary-value-lg {netProfit > 0 ? 'positive' : netProfit < 0 ? 'negative' : ''}">
         {formatAmount(netProfit, spot.currency)} <span class="currency">{spot.currency}</span>
       </p>
     </div>
@@ -692,6 +748,46 @@
             <input bind:value={deposit_value} type="number" placeholder="Amount" class="deposit-input" aria-label="Deposit amount" />
           {/if}
         </div>
+
+        <div class="field">
+          <label for="s-client">Client name <span class="optional">(optional)</span></label>
+          <input id="s-client" bind:value={client_name} type="text" placeholder="Client name" />
+        </div>
+
+        <div class="field">
+          <p class="field-label">Project photo <span class="optional">(optional)</span></p>
+          {#if project_image}
+            <div class="img-preview">
+              <img src={project_image} alt="Project" />
+              <button type="button" class="btn-img-remove" onclick={() => project_image = null}>×</button>
+            </div>
+          {:else}
+            <label class="btn-upload {uploadingProjectImage ? 'btn-upload-loading' : ''}">
+              {uploadingProjectImage ? 'Uploading···' : '+ Add photo'}
+              <input type="file" accept="image/*" onchange={handleProjectImageUpload} disabled={uploadingProjectImage} />
+            </label>
+          {/if}
+        </div>
+
+        {#if ref_images.length > 0 || ref_images.length < 3}
+        <div class="field">
+          <p class="field-label">References <span class="optional">(up to 3)</span></p>
+          <div class="ref-grid">
+            {#each ref_images as url, i}
+              <div class="ref-thumb">
+                <img src={url} alt="Ref {i + 1}" />
+                <button type="button" class="btn-img-remove" onclick={() => removeRefImage(i)}>×</button>
+              </div>
+            {/each}
+            {#if ref_images.length < 3}
+              <label class="btn-ref-upload {uploadingRefImage ? 'btn-upload-loading' : ''}">
+                {uploadingRefImage ? '···' : '+'}
+                <input type="file" accept="image/*" onchange={handleRefImageUpload} disabled={uploadingRefImage} />
+              </label>
+            {/if}
+          </div>
+        </div>
+        {/if}
 
         {#if sessionError}
           <p class="form-error">{sessionError}</p>
@@ -1419,6 +1515,93 @@
     color: var(--error);
     padding: 0 2px;
   }
+
+  .btn-upload {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 12px;
+    cursor: pointer;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+
+  .btn-upload input { display: none; }
+  .btn-upload:active { border-color: var(--text-3); }
+  .btn-upload-loading { opacity: 0.5; cursor: not-allowed; }
+
+  .img-preview {
+    position: relative;
+    width: 100%;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .img-preview img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .btn-img-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(0,0,0,0.6);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 14px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .ref-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .ref-thumb {
+    position: relative;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .ref-thumb img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .btn-ref-upload {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+    font-size: 20px;
+    height: 80px;
+    cursor: pointer;
+  }
+
+  .btn-ref-upload input { display: none; }
 
   .date-warning {
     font-size: 12px;
