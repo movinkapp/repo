@@ -84,11 +84,19 @@ export async function disableNotifications() {
       if (sub) await sub.unsubscribe()
     }
 
-    const { data: { user }, error } = await supabase.auth.getUser()
-    if (error || !user) return
+    const { data, error } = await supabase.auth.getUser()
+    const user = data?.user
+    if (error || !user) return { ok: false, reason: 'no_user' }
 
-    await supabase.from('push_subscriptions').delete().eq('user_id', user.id)
+    const { error: dbError } = await supabase
+      .from('push_subscriptions')
+      .delete()
+      .eq('user_id', user.id)
+
+    if (dbError) return { ok: false, reason: 'db_error' }
+    return { ok: true }
   } catch (e) {
     console.error('disableNotifications error:', e)
+    return { ok: false, reason: 'error' }
   }
 }

@@ -2,6 +2,7 @@ import { cubicOut } from 'svelte/easing'
 import { crossfade } from 'svelte/transition'
 
 export function getStatus(spot) {
+  if (!spot?.start_date || !spot?.end_date) return 'upcoming'
   const today = new Date()
   const start = new Date(spot.start_date)
   const end = new Date(spot.end_date)
@@ -11,6 +12,7 @@ export function getStatus(spot) {
 }
 
 export function formatDate(date) {
+  if (!date) return '—'
   return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 

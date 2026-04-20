@@ -56,17 +56,26 @@ const originalHandle = async ({ event, resolve }) => {
 
   if (session && !PUBLIC_PATHS.includes(path) && path !== '/onboarding') {
     try {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('onboarding_completed')
-        .eq('id', session.user.id)
-        .single()
+      const { data: profile } = await Promise.race([
+        supabase
+          .from('users')
+          .select('onboarding_completed')
+          .eq('id', session.user.id)
+          .single(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('profile query timeout')), 3000)
+        )
+      ]).catch(e => {
+        console.error('[hooks] profile query failed or timed out:', e)
+        return { data: null }
+      })
 
       if (profile && !profile.onboarding_completed) {
         throw redirect(303, '/onboarding')
       }
     } catch (e) {
       if (e?.status) throw e
+      console.error('[hooks] onboarding profile check failed:', e)
     }
   }
 

@@ -20,7 +20,7 @@ export function toastConfirm(message, onConfirm) {
     type: 'confirm',
     onConfirm: () => {
       toasts.update(t => t.filter(x => x.id !== current))
-      onConfirm()
+      if (typeof onConfirm === 'function') onConfirm()
     },
     onCancel: () => {
       toasts.update(t => t.filter(x => x.id !== current))
