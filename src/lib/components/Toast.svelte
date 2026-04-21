@@ -3,7 +3,7 @@
   import { fly } from 'svelte/transition'
 </script>
 
-<div class="toast-container">
+<div class="toast-container" aria-live="polite" aria-atomic="false">
   {#each $toasts as t (t.id)}
     <div
       class="toast toast-{t.type}"

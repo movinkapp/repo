@@ -4,9 +4,15 @@
   export let lat = null
   export let lon = null
   export let placeholder = 'City'
-  export let id = 'city-picker'
+  export let id = `city-picker-${Math.random().toString(36).slice(2, 7)}`
+
+  import { onDestroy } from 'svelte'
 
   let query = value || ''
+
+  onDestroy(() => {
+    clearTimeout(debounceTimer)
+  })
   let suggestions = []
   let loading = false
   let debounceTimer = null
