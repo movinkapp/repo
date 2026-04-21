@@ -50,26 +50,33 @@
   const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
 
   onMount(async () => {
-    const { data: { user: u } } = await supabase.auth.getUser()
-    user = u
+    try {
+      const { data: authData } = await supabase.auth.getUser()
+      const u = authData?.user
+      if (!u) { goto('/login'); return }
+      user = u
 
-    const { data: profile } = await supabase
-      .from('users')
-      .select('base_currency, instagram, community_visible')
-      .eq('id', u.id)
-      .single()
+      const { data: profile } = await supabase
+        .from('users')
+        .select('base_currency, instagram, community_visible')
+        .eq('id', u.id)
+        .single()
 
-    baseCurrency = profile?.base_currency || 'EUR'
-    instagram = profile?.instagram || ''
-    communityVisible = profile?.community_visible || false
-    loading = false
-    notificationsEnabled = await isNotificationsEnabled()
-    if (typeof Notification !== 'undefined') {
-      notifPermission = Notification.permission
-    }
+      baseCurrency = profile?.base_currency || 'EUR'
+      instagram = profile?.instagram || ''
+      communityVisible = profile?.community_visible || false
+      notificationsEnabled = await isNotificationsEnabled()
+      if (typeof Notification !== 'undefined') {
+        notifPermission = Notification.permission
+      }
 
-    if (profile?.community_visible) {
-      await loadNearbyCount(u.id)
+      if (profile?.community_visible) {
+        await loadNearbyCount(u.id)
+      }
+    } catch (e) {
+      console.error('[profile] load error:', e)
+    } finally {
+      loading = false
     }
   })
 
@@ -118,7 +125,7 @@
     if (notificationsEnabled) {
       const confirmed = await new Promise((resolve) => {
         toasts.update(t => [...t, {
-          id: 999,
+          id: Date.now(),
           message: 'Disable push notifications?',
           type: 'confirm',
           onConfirm: () => {

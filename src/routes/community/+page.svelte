@@ -12,7 +12,9 @@
   let myCity = null
 
   onMount(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: authData } = await supabase.auth.getUser()
+    const user = authData?.user
+    if (!user) { goto('/login'); return }
     currentUser = user
 
     const { data: profile } = await supabase
