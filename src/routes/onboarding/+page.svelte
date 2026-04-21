@@ -2,9 +2,11 @@
   import { supabase } from '$lib/supabase.js'
   import { goto } from '$app/navigation'
   import { currencySymbols, fadeSlide } from '$lib/utils.js'
+  import { toast } from '$lib/toast.js'
 
   let current = 0
   let showCurrencyModal = false
+  let loading = false
   let tempCurrency = 'EUR'
   const currencies = ['EUR', 'GBP', 'USD', 'BRL', 'AUD', 'JPY', 'CHF', 'CAD', 'KRW']
 
@@ -49,7 +51,10 @@
   ]
 
   async function finish() {
-    const { data: { user } } = await supabase.auth.getUser()
+    if (loading) return
+    const { data, error: authError } = await supabase.auth.getUser()
+    const user = data?.user
+    if (authError || !user) { toast('Session expired. Please log in again.', 'error'); goto('/login'); return }
     await supabase
       .from('users')
       .update({ onboarding_completed: true })
@@ -66,6 +71,7 @@
   }
 
   async function saveCurrencyAndFinish() {
+    if (loading) return
     const { data: { user } } = await supabase.auth.getUser()
     await supabase
       .from('users')

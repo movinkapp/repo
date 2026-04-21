@@ -43,7 +43,9 @@
   .bottom-nav {
     position: fixed;
     bottom: 0;
+    bottom: env(safe-area-inset-bottom, 0);
     left: 50%;
+    padding-bottom: env(safe-area-inset-bottom, 0);
     transform: translateX(-50%);
     width: 100%;
     max-width: 430px;
