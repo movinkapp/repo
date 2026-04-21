@@ -48,10 +48,12 @@
   }))
 
   async function loadSimulations() {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: authData } = await supabase.auth.getUser()
+    const user = authData?.user
+    if (!user) return
     const { data } = await supabase
       .from('simulations')
-      .select('*')
+      .select('id, user_id, deal_type, deal_value, avg_session, num_days, net_result, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     simulations = data || []
@@ -60,7 +62,9 @@
   async function saveSimulation() {
     if (!saveLabel.trim()) return
     saving = true
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: authData } = await supabase.auth.getUser()
+    const user = authData?.user
+    if (!user) return
     const { error } = await supabase.from('simulations').insert({
       user_id: user.id,
       label: saveLabel.trim(),

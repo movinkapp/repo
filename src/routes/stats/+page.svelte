@@ -44,7 +44,7 @@
 
   $: totalGross = yearSessions.reduce((sum, s) => {
     const spot = spots.find(sp => sp.id === s.spot_id)
-    if (!spot || !s.value) return sum
+    if (!spot || s.value == null) return sum
     const rate = spot.exchange_rate || 1
     const artist = spot.deal_type === 'flat_daily'
       ? (s.value - spot.deal_value)
@@ -76,7 +76,7 @@
 
     const gross = monthSessions.reduce((sum, s) => {
       const spot = spots.find(sp => sp.id === s.spot_id)
-      if (!spot || !s.value) return sum
+      if (!spot || s.value == null) return sum
       const rate = spot.exchange_rate || 1
       const artist = spot.deal_type === 'flat_daily'
         ? (s.value - spot.deal_value)
@@ -103,7 +103,9 @@
   let currency = 'EUR'
 
   onMount(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: authData } = await supabase.auth.getUser()
+    const user = authData?.user
+    if (!user) { goto('/login'); return }
 
     const [spotsRes, sessionsRes, costsRes, profileRes] = await Promise.all([
       supabase.from('spots').select('*'),
