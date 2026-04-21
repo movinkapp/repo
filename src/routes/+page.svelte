@@ -55,6 +55,7 @@
     const LOOP_TOTAL = cities.length * SEG_TOTAL
 
     let t0 = null, raf = null, trail = []
+    let scrambleTimer = null
     let lastAngle = -Math.PI * 0.35
 
     function eio(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t }
@@ -182,13 +183,14 @@
       requestAnimationFrame(step)
     }
 
-    setTimeout(() => {
+    scrambleTimer = setTimeout(() => {
       const el = document.getElementById('hero-tag')
       if (el) scramble(el, 'FOR TATTOO ARTISTS ON THE MOVE', 1200)
     }, 500)
 
     return () => {
       cancelAnimationFrame(raf)
+      clearTimeout(scrambleTimer)
       window.removeEventListener('resize', resize)
       io.disconnect()
     }

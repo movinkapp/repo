@@ -23,28 +23,35 @@
   }
 
   onMount(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: authData } = await supabase.auth.getUser()
+    const user = authData?.user
+    if (!user) { goto('/login'); return }
     userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'there'
 
-    const { data: spotsData } = await supabase
-      .from('spots')
-      .select('*')
-      .order('start_date', { ascending: true })
+    loading = true
+    try {
+      const { data: spotsData } = await supabase
+        .from('spots')
+        .select('*')
+        .order('start_date', { ascending: true })
 
-    const { data: sessionsData } = await supabase
-      .from('sessions')
-      .select('id, spot_id')
+      const { data: sessionsData } = await supabase
+        .from('sessions')
+        .select('id, spot_id')
 
-    spots = spotsData || []
-    sessions = sessionsData || []
-    loading = false
-
-    const { data: profile } = await supabase
-      .from('users')
-      .select('base_currency')
-      .eq('id', user.id)
-      .single()
-    if (!profile?.base_currency) showCurrencyModal = true
+      spots = spotsData || []
+      sessions = sessionsData || []
+      const { data: profile } = await supabase
+        .from('users')
+        .select('base_currency')
+        .eq('id', user.id)
+        .single()
+      if (!profile?.base_currency) showCurrencyModal = true
+    } catch (e) {
+      console.error('[home] load error:', e)
+    } finally {
+      loading = false
+    }
   })
 
   $: activeSpot = spots.find(s => getStatus(s) === 'active')
@@ -69,12 +76,16 @@
   }
 
   async function saveCurrency() {
-    const { data: { user } } = await supabase.auth.getUser()
-    await supabase
-      .from('users')
-      .update({ base_currency: tempCurrency })
-      .eq('id', user.id)
-    showCurrencyModal = false
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      await supabase
+        .from('users')
+        .update({ base_currency: tempCurrency })
+        .eq('id', user.id)
+      showCurrencyModal = false
+    } catch (e) {
+      console.error('[home] saveCurrency error:', e)
+    }
   }
 </script>
 
