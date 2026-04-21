@@ -7,12 +7,14 @@
   let status = 'Confirming your email...'
 
   onMount(() => {
-    const next = $page.url.searchParams.get('next') || '/onboarding'
+    const rawNext = $page.url.searchParams.get('next') || '/onboarding'
+    const next = rawNext.startsWith('/') ? rawNext : '/onboarding'
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         status = 'Email confirmed — redirecting...'
         subscription.unsubscribe()
+        clearTimeout(failureTimeout)
         setTimeout(() => goto(next), 600)
       }
     })
@@ -21,11 +23,12 @@
       if (session) {
         status = 'Email confirmed — redirecting...'
         subscription.unsubscribe()
+        clearTimeout(failureTimeout)
         setTimeout(() => goto(next), 600)
       }
     })
 
-    setTimeout(() => {
+    const failureTimeout = setTimeout(() => {
       status = 'Something went wrong. Try logging in.'
     }, 8000)
 
