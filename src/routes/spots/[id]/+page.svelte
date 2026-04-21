@@ -75,8 +75,16 @@
   let uploadingProjectImage = false
   let uploadingRefImage = false
 
-  const CLOUD_NAME = import.meta.env.PUBLIC_CLOUDINARY_CLOUD_NAME
-  const UPLOAD_PRESET = import.meta.env.PUBLIC_CLOUDINARY_UPLOAD_PRESET
+  const CLOUD_NAME = import.meta.env.PUBLIC_CLOUDINARY_CLOUD_NAME || ''
+  const UPLOAD_PRESET = import.meta.env.PUBLIC_CLOUDINARY_UPLOAD_PRESET || ''
+
+  async function canUpload() {
+    if (!CLOUD_NAME || !UPLOAD_PRESET) {
+      toast('Image upload not configured. Contact support.', 'error')
+      return false
+    }
+    return true
+  }
 
   async function uploadToCloudinary(file) {
     const formData = new FormData()
@@ -86,8 +94,9 @@
       method: 'POST',
       body: formData
     })
+    if (!res.ok) throw new Error(`Upload failed: ${res.status}`)
     const data = await res.json()
-    if (!data.secure_url) throw new Error('Upload failed')
+    if (!data.secure_url) throw new Error('Upload failed: no secure_url')
     return data.secure_url
   }
 
@@ -164,7 +173,7 @@
 
     const { data: sessionsData } = await supabase
       .from('sessions')
-      .select('id, spot_id, date, status, session_type, value, deposit_received, deposit_value, payment_method, notes')
+      .select('id, spot_id, date, status, session_type, value, deposit_received, deposit_value, payment_method, notes, client_name, project_image, ref_images')
       .eq('spot_id', id)
       .order('date', { ascending: true })
 
@@ -247,7 +256,7 @@
 
     const { data } = await supabase
       .from('sessions')
-      .select('id, spot_id, date, status, session_type, value, deposit_received, deposit_value, payment_method, notes')
+      .select('id, spot_id, date, status, session_type, value, deposit_received, deposit_value, payment_method, notes, client_name, project_image, ref_images')
       .eq('spot_id', $page.params.id)
       .order('date', { ascending: true })
     sessions = data
@@ -360,7 +369,7 @@
 
     const { data } = await supabase
       .from('sessions')
-      .select('id, spot_id, date, status, session_type, value, deposit_received, deposit_value, payment_method, notes')
+      .select('id, spot_id, date, status, session_type, value, deposit_received, deposit_value, payment_method, notes, client_name, project_image, ref_images')
       .eq('spot_id', $page.params.id)
       .order('date', { ascending: true })
     sessions = data
@@ -769,7 +778,7 @@
           {/if}
         </div>
 
-        {#if ref_images.length > 0 || ref_images.length < 3}
+        {#if ref_images.length < 3}
         <div class="field">
           <p class="field-label">References <span class="optional">(up to 3)</span></p>
           <div class="ref-grid">

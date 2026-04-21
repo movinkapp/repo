@@ -52,7 +52,9 @@
       return
     }
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: authData } = await supabase.auth.getUser()
+    const user = authData?.user
+    if (!user) { toast('Session expired. Please log in again.', 'error'); goto('/login'); loading = false; return }
     const exchange_rate = await getExchangeRate(currency)
 
     const { data: newSpot, error: err } = await supabase.from('spots').insert({
@@ -67,7 +69,7 @@
       start_date: start_date ? `${start_date.getFullYear()}-${String(start_date.getMonth() + 1).padStart(2, '0')}-${String(start_date.getDate()).padStart(2, '0')}` : null,
       end_date: end_date ? `${end_date.getFullYear()}-${String(end_date.getMonth() + 1).padStart(2, '0')}-${String(end_date.getDate()).padStart(2, '0')}` : null,
       deal_type,
-      deal_value,
+      deal_value: Number(deal_value),
       currency,
       base_currency: 'EUR',
       exchange_rate,
