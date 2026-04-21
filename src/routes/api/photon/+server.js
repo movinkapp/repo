@@ -11,9 +11,15 @@ export async function GET({ url }) {
   const upstream = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&layer=city&lang=en`
   try {
     const res = await fetch(upstream)
+    if (!res.ok) {
+      return new Response(JSON.stringify({ features: [] }), {
+        status: res.status,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
     const text = await res.text()
     return new Response(text, {
-      status: res.status,
+      status: 200,
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'public, max-age=60'

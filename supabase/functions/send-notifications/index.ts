@@ -35,15 +35,18 @@ Deno.serve(async (req) => {
   const today = new Date().toISOString().split('T')[0]
 
   const spotsRes = await db(`spots?select=*,users!inner(id)&start_date=gte.${today}`)
+  if (!spotsRes.ok) return new Response(JSON.stringify({ error: 'failed to fetch spots' }), { status: 502, headers: { 'Content-Type': 'application/json' } })
   const spots = await spotsRes.json()
 
   const subsRes = await db('push_subscriptions?select=*')
+  if (!subsRes.ok) return new Response(JSON.stringify({ error: 'failed to fetch subscriptions' }), { status: 502, headers: { 'Content-Type': 'application/json' } })
   const subscriptions = await subsRes.json()
 
   const notifications: { subscription: object, title: string, body: string, url: string }[] = []
 
   for (const spot of spots) {
     const startDate = new Date(spot.start_date)
+    if (isNaN(startDate.getTime())) continue
     const diffDays = Math.ceil((startDate.getTime() - Date.now()) / 86400000)
     const sub = subscriptions.find((s: { user_id: string }) => s.user_id === spot.user_id)
     if (!sub) continue
@@ -98,6 +101,20 @@ Deno.serve(async (req) => {
 
   const sent = results.filter(r => r.status === 'fulfilled').length
   const failed = results.filter(r => r.status === 'rejected').length
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i]
+    if (result.status === 'rejected') {
+      const err = result.reason as any
+      if (err?.statusCode === 410) {
+        const sub = notifications[i].subscription as any
+        const endpoint = sub?.endpoint
+        if (endpoint) {
+          await db(`push_subscriptions?endpoint=eq.${encodeURIComponent(endpoint)}`, { method: 'DELETE' })
+        }
+      }
+    }
+  }
 
   return new Response(JSON.stringify({ sent, failed, total: notifications.length }), {
     headers: { 'Content-Type': 'application/json' }
