@@ -20,6 +20,8 @@
   
 
   let showChecklist = false
+  let activeSessionSheet = null
+  let lightboxImage = null
 
   let editingSpot = false
   let edit_studio_name = ''
@@ -961,7 +963,7 @@
             </div>
           </div>
         {:else}
-          <div class="session-card">
+          <div class="session-card" onclick={() => activeSessionSheet = activeSessionSheet?.id === session.id ? null : session} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter') activeSessionSheet = activeSessionSheet?.id === session.id ? null : session }}>
             <div class="session-top">
               <p class="session-date">{formatDate(session.date)}</p>
               <p class="session-net">+{formatAmount(calcArtist(session), spot.currency)} <span class="session-currency">{spot.currency}</span></p>
@@ -970,10 +972,13 @@
               {session.session_type === 'full_day' ? 'Full day' : 'Half day'} · {session.payment_method}
               {#if session.value} · Total: {formatAmount(session.value, spot.currency)} {spot.currency}{/if}
             </p>
+            {#if session.client_name}
+              <p class="session-client">{session.client_name}</p>
+            {/if}
             {#if session.deposit_received && session.deposit_value}
               <p class="session-deposit">Deposit: {formatAmount(session.deposit_value, spot.currency)} {spot.currency} already received</p>
             {/if}
-            <div class="card-actions">
+            <div class="card-actions" onclick={(e) => e.stopPropagation()}>
               <button class="btn-icon" onclick={() => startEditSession(session)} aria-label="Edit session">
                 <Pencil size={13} strokeWidth={1.5} />
               </button>
@@ -986,6 +991,53 @@
       {/each}
     {/if}
   </div>
+
+  {#if activeSessionSheet}
+    <button class="sheet-overlay" onclick={() => activeSessionSheet = null} aria-label="Close"></button>
+    <div class="sheet" transition:fade={{ duration: 200 }}>
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div>
+          <p class="sheet-title">{activeSessionSheet.client_name || 'Session'}</p>
+          <p class="sheet-sub">{formatDate(activeSessionSheet.date)} · {activeSessionSheet.session_type === 'full_day' ? 'Full day' : 'Half day'}</p>
+        </div>
+        <p class="sheet-amount">+{formatAmount(calcArtist(activeSessionSheet), spot.currency)} <span class="sheet-currency">{spot.currency}</span></p>
+      </div>
+      {#if activeSessionSheet.project_image}
+        <button class="sheet-project-img" onclick={() => lightboxImage = activeSessionSheet.project_image}>
+          <img src={activeSessionSheet.project_image} alt="Project" />
+        </button>
+      {/if}
+      {#if activeSessionSheet.ref_images?.length > 0}
+        <div class="sheet-section-label">References</div>
+        <div class="sheet-ref-grid">
+          {#each activeSessionSheet.ref_images as url, i}
+            <button class="sheet-ref-thumb" onclick={() => lightboxImage = url}>
+              <img src={url} alt="Ref {i + 1}" />
+            </button>
+          {/each}
+        </div>
+      {/if}
+      <div class="sheet-meta">
+        <p>{activeSessionSheet.payment_method === 'cash' ? 'Cash' : 'Transfer'}</p>
+        {#if activeSessionSheet.value}<p>Total: {formatAmount(activeSessionSheet.value, spot.currency)} {spot.currency}</p>{/if}
+        {#if activeSessionSheet.deposit_received && activeSessionSheet.deposit_value}
+          <p>Deposit: {formatAmount(activeSessionSheet.deposit_value, spot.currency)} {spot.currency}</p>
+        {/if}
+        {#if activeSessionSheet.notes}<p class="sheet-notes">{activeSessionSheet.notes}</p>{/if}
+      </div>
+      <div class="sheet-actions">
+        <button class="btn-cancel" onclick={() => { startEditSession(activeSessionSheet); activeSessionSheet = null }}>Edit</button>
+        <button class="btn-primary" onclick={() => activeSessionSheet = null}>Close</button>
+      </div>
+    </div>
+  {/if}
+
+  {#if lightboxImage}
+    <button class="lightbox-overlay" onclick={() => lightboxImage = null}>
+      <img src={lightboxImage} alt="Full size" class="lightbox-img" />
+    </button>
+  {/if}
 
   <div class="section">
     <div class="section-header">
@@ -1549,6 +1601,173 @@
   .session-deposit {
     font-size: 12px;
     color: var(--active);
+  }
+
+  .session-client {
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  .sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 40;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .sheet {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    padding: 12px 20px calc(32px + env(safe-area-inset-bottom, 0px));
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    margin: 0 auto 4px;
+    flex-shrink: 0;
+  }
+
+  .sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .sheet-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .sheet-sub {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  .sheet-amount {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--upcoming);
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+  }
+
+  .sheet-currency {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-2);
+  }
+
+  .sheet-project-img {
+    width: 100%;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .sheet-project-img img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    border-radius: var(--radius-sm);
+  }
+
+  .sheet-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .sheet-ref-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .sheet-ref-thumb {
+    border: none;
+    padding: 0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .sheet-ref-thumb img {
+    width: 100%;
+    height: 90px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .sheet-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sheet-meta p {
+    font-size: 13px;
+    color: var(--text-2);
+  }
+
+  .sheet-notes {
+    color: var(--text-3) !important;
+    font-style: italic;
+  }
+
+  .sheet-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 8px;
+  }
+
+  .lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: zoom-out;
+    padding: 20px;
+  }
+
+  .lightbox-img {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
   }
 
   .card-actions {
