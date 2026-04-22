@@ -155,7 +155,45 @@
   let edit_deposit_value = ''
   let edit_payment_method = 'cash'
   let edit_session_notes = ''
+  let edit_client_name = ''
+  let edit_project_image = null
+  let edit_ref_images = []
+  let uploadingEditProjectImage = false
+  let uploadingEditRefImage = false
   let editSessionError = ''
+
+  async function handleEditProjectImageUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!(await canUpload())) return
+    uploadingEditProjectImage = true
+    try {
+      edit_project_image = await uploadToCloudinary(file)
+    } catch {
+      toast('Could not upload image. Try again.', 'error')
+    } finally {
+      uploadingEditProjectImage = false
+    }
+  }
+
+  async function handleEditRefImageUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (edit_ref_images.length >= 3) { toast('Max 3 reference images.', 'error'); return }
+    uploadingEditRefImage = true
+    try {
+      const url = await uploadToCloudinary(file)
+      edit_ref_images = [...edit_ref_images, url]
+    } catch {
+      toast('Could not upload image. Try again.', 'error')
+    } finally {
+      uploadingEditRefImage = false
+    }
+  }
+
+  function removeEditRefImage(index) {
+    edit_ref_images = edit_ref_images.filter((_, i) => i !== index)
+  }
 
   // edit cost fields
   let edit_cost_type = 'flight'
@@ -318,6 +356,9 @@
     edit_deposit_value = session.deposit_value || ''
     edit_payment_method = session.payment_method
     edit_session_notes = session.notes || ''
+    edit_client_name = session.client_name || ''
+    edit_project_image = session.project_image || null
+    edit_ref_images = session.ref_images || []
     editSessionError = ''
   }
 
@@ -360,7 +401,10 @@
       deposit_received: edit_deposit_received,
       deposit_value: edit_deposit_received ? Number(edit_deposit_value) : null,
       payment_method: edit_payment_method,
-      notes: edit_session_notes.trim() || null
+      notes: edit_session_notes.trim() || null,
+      client_name: edit_client_name.trim() || null,
+      project_image: edit_project_image || null,
+      ref_images: edit_ref_images.length > 0 ? edit_ref_images : []
     }).eq('id', id)
 
     if (error) {
@@ -866,6 +910,46 @@
                 <input bind:value={edit_deposit_value} type="number" placeholder="Amount" class="deposit-input" aria-label="Deposit amount" />
               {/if}
             </div>
+
+            <div class="field">
+              <label for="ec-client">Client name <span class="optional">(optional)</span></label>
+              <input id="ec-client" bind:value={edit_client_name} type="text" placeholder="Client name" />
+            </div>
+
+            <div class="field">
+              <p class="field-label">Project photo <span class="optional">(optional)</span></p>
+              {#if edit_project_image}
+                <div class="img-preview">
+                  <img src={edit_project_image} alt="Project" />
+                  <button type="button" class="btn-img-remove" onclick={() => edit_project_image = null}>×</button>
+                </div>
+              {:else}
+                <label class="btn-upload {uploadingEditProjectImage ? 'btn-upload-loading' : ''}">
+                  {uploadingEditProjectImage ? 'Uploading···' : '+ Add photo'}
+                  <input type="file" accept="image/*" onchange={handleEditProjectImageUpload} disabled={uploadingEditProjectImage} />
+                </label>
+              {/if}
+            </div>
+
+            {#if edit_ref_images.length >= 0}
+            <div class="field">
+              <p class="field-label">References <span class="optional">(up to 3)</span></p>
+              <div class="ref-grid">
+                {#each edit_ref_images as url, i}
+                  <div class="ref-thumb">
+                    <img src={url} alt="Ref {i + 1}" />
+                    <button type="button" class="btn-img-remove" onclick={() => removeEditRefImage(i)}>×</button>
+                  </div>
+                {/each}
+                {#if edit_ref_images.length < 3}
+                  <label class="btn-ref-upload {uploadingEditRefImage ? 'btn-upload-loading' : ''}">
+                    {uploadingEditRefImage ? '···' : '+'}
+                    <input type="file" accept="image/*" onchange={handleEditRefImageUpload} disabled={uploadingEditRefImage} />
+                  </label>
+                {/if}
+              </div>
+            </div>
+            {/if}
 
             {#if editSessionError}
               <p class="form-error">{editSessionError}</p>
