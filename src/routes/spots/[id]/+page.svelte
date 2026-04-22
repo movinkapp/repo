@@ -9,6 +9,7 @@
   import { toast, toastConfirm } from '$lib/toast.js'
   import CalendarPicker from '$lib/components/CalendarPicker.svelte'
   import CityPicker from '$lib/components/CityPicker.svelte'
+  import { PUBLIC_CLOUDINARY_CLOUD_NAME, PUBLIC_CLOUDINARY_UPLOAD_PRESET } from '$env/static/public'
 
   let spot = null
   let sessions = []
@@ -75,8 +76,8 @@
   let uploadingProjectImage = false
   let uploadingRefImage = false
 
-  const CLOUD_NAME = import.meta.env.PUBLIC_CLOUDINARY_CLOUD_NAME || ''
-  const UPLOAD_PRESET = import.meta.env.PUBLIC_CLOUDINARY_UPLOAD_PRESET || ''
+  const CLOUD_NAME = PUBLIC_CLOUDINARY_CLOUD_NAME || ''
+  const UPLOAD_PRESET = PUBLIC_CLOUDINARY_UPLOAD_PRESET || ''
 
   async function canUpload() {
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
