@@ -103,6 +103,7 @@
   async function handleProjectImageUpload(e) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (!(await canUpload())) return
     uploadingProjectImage = true
     try {
       project_image = await uploadToCloudinary(file)
@@ -778,7 +779,7 @@
           {/if}
         </div>
 
-        {#if ref_images.length < 3}
+        {#if ref_images.length >= 0}
         <div class="field">
           <p class="field-label">References <span class="optional">(up to 3)</span></p>
           <div class="ref-grid">
