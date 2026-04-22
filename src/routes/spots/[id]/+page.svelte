@@ -4,7 +4,7 @@
   import { fade } from 'svelte/transition'
   import { page } from '$app/stores'
   import { goto } from '$app/navigation'
-  import { ChevronLeft, Plus, MapPin, X, Trash2, Pencil, Settings2, ClipboardList, Check } from 'lucide-svelte'
+  import { ChevronLeft, ChevronRight, Plus, MapPin, X, Trash2, Pencil, Settings2, ClipboardList, Check } from 'lucide-svelte'
   import { formatDate, formatDeal, formatAmount } from '$lib/utils.js'
   import { toast, toastConfirm } from '$lib/toast.js'
   import CalendarPicker from '$lib/components/CalendarPicker.svelte'
@@ -966,7 +966,10 @@
           <div class="session-card" onclick={() => activeSessionSheet = activeSessionSheet?.id === session.id ? null : session} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter') activeSessionSheet = activeSessionSheet?.id === session.id ? null : session }}>
             <div class="session-top">
               <p class="session-date">{formatDate(session.date)}</p>
-              <p class="session-net">+{formatAmount(calcArtist(session), spot.currency)} <span class="session-currency">{spot.currency}</span></p>
+              <div class="session-top-right">
+                <p class="session-net">+{formatAmount(calcArtist(session), spot.currency)} <span class="session-currency">{spot.currency}</span></p>
+                <ChevronRight size={14} strokeWidth={1.5} class="session-chevron" />
+              </div>
             </div>
             <p class="session-meta">
               {session.session_type === 'full_day' ? 'Full day' : 'Half day'} · {session.payment_method}
@@ -978,14 +981,6 @@
             {#if session.deposit_received && session.deposit_value}
               <p class="session-deposit">Deposit: {formatAmount(session.deposit_value, spot.currency)} {spot.currency} already received</p>
             {/if}
-            <div class="card-actions" onclick={(e) => e.stopPropagation()}>
-              <button class="btn-icon" onclick={() => startEditSession(session)} aria-label="Edit session">
-                <Pencil size={13} strokeWidth={1.5} />
-              </button>
-              <button class="btn-icon btn-icon-danger" onclick={() => deleteSession(session.id)} aria-label="Delete session">
-                <Trash2 size={13} strokeWidth={1.5} />
-              </button>
-            </div>
           </div>
         {/if}
       {/each}
@@ -996,18 +991,43 @@
     <button class="sheet-overlay" onclick={() => activeSessionSheet = null} aria-label="Close"></button>
     <div class="sheet" transition:fade={{ duration: 200 }}>
       <div class="sheet-handle"></div>
-      <div class="sheet-header">
+
+      <div class="sheet-topbar">
+        <div class="sheet-topbar-actions">
+          <button class="btn-sheet-delete" onclick={() => { const s = activeSessionSheet; activeSessionSheet = null; deleteSession(s.id) }} aria-label="Delete session">
+            <Trash2 size={15} strokeWidth={1.5} />
+          </button>
+          <button class="btn-sheet-close" onclick={() => activeSessionSheet = null} aria-label="Close">
+            <X size={16} strokeWidth={1.5} />
+          </button>
+        </div>
+      </div>
+
+      <div class="sheet-hero">
         <div>
           <p class="sheet-title">{activeSessionSheet.client_name || 'Session'}</p>
-          <p class="sheet-sub">{formatDate(activeSessionSheet.date)} · {activeSessionSheet.session_type === 'full_day' ? 'Full day' : 'Half day'}</p>
+          <p class="sheet-sub">{formatDate(activeSessionSheet.date)} · {activeSessionSheet.session_type === 'full_day' ? 'Full day' : 'Half day'} · {activeSessionSheet.payment_method}</p>
         </div>
         <p class="sheet-amount">+{formatAmount(calcArtist(activeSessionSheet), spot.currency)} <span class="sheet-currency">{spot.currency}</span></p>
       </div>
+
+      {#if activeSessionSheet.value || (activeSessionSheet.deposit_received && activeSessionSheet.deposit_value)}
+        <div class="sheet-pills">
+          {#if activeSessionSheet.value}
+            <span class="sheet-pill">Total {formatAmount(activeSessionSheet.value, spot.currency)} {spot.currency}</span>
+          {/if}
+          {#if activeSessionSheet.deposit_received && activeSessionSheet.deposit_value}
+            <span class="sheet-pill sheet-pill-deposit">Deposit {formatAmount(activeSessionSheet.deposit_value, spot.currency)} {spot.currency}</span>
+          {/if}
+        </div>
+      {/if}
+
       {#if activeSessionSheet.project_image}
         <button class="sheet-project-img" onclick={() => lightboxImage = activeSessionSheet.project_image}>
           <img src={activeSessionSheet.project_image} alt="Project" />
         </button>
       {/if}
+
       {#if activeSessionSheet.ref_images?.length > 0}
         <div class="sheet-section-label">References</div>
         <div class="sheet-ref-grid">
@@ -1018,17 +1038,16 @@
           {/each}
         </div>
       {/if}
-      <div class="sheet-meta">
-        <p>{activeSessionSheet.payment_method === 'cash' ? 'Cash' : 'Transfer'}</p>
-        {#if activeSessionSheet.value}<p>Total: {formatAmount(activeSessionSheet.value, spot.currency)} {spot.currency}</p>{/if}
-        {#if activeSessionSheet.deposit_received && activeSessionSheet.deposit_value}
-          <p>Deposit: {formatAmount(activeSessionSheet.deposit_value, spot.currency)} {spot.currency}</p>
-        {/if}
-        {#if activeSessionSheet.notes}<p class="sheet-notes">{activeSessionSheet.notes}</p>{/if}
-      </div>
+
+      {#if activeSessionSheet.notes}
+        <p class="sheet-notes">{activeSessionSheet.notes}</p>
+      {/if}
+
       <div class="sheet-actions">
-        <button class="btn-cancel" onclick={() => { startEditSession(activeSessionSheet); activeSessionSheet = null }}>Edit</button>
-        <button class="btn-primary" onclick={() => activeSessionSheet = null}>Close</button>
+        <button class="btn-sheet-delete" onclick={() => { const id = activeSessionSheet.id; activeSessionSheet = null; deleteSession(id) }} aria-label="Delete session">
+          <Trash2 size={15} strokeWidth={1.5} />
+        </button>
+        <button class="btn-primary" onclick={() => { startEditSession(activeSessionSheet); activeSessionSheet = null }}>Edit session</button>
       </div>
     </div>
   {/if}
@@ -1570,12 +1589,29 @@
   .session-top {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
   }
 
   .session-date {
     font-size: 14px;
     font-weight: 600;
+  }
+
+  .session-top-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  :global(.session-chevron) {
+    color: var(--text-3);
+    flex-shrink: 0;
+    animation: chevron-hint 2.5s ease-in-out infinite;
+  }
+
+  @keyframes chevron-hint {
+    0%, 100% { transform: translateX(0); opacity: 0.4; }
+    50% { transform: translateX(3px); opacity: 0.9; }
   }
 
   .session-net {
@@ -1611,9 +1647,12 @@
 
   .sheet-overlay {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 65px;
     background: rgba(0,0,0,0.5);
-    z-index: 40;
+    z-index: 99;
     border: none;
     cursor: pointer;
     width: 100%;
@@ -1621,21 +1660,22 @@
 
   .sheet {
     position: fixed;
-    bottom: 0;
+    bottom: 65px;
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
     max-width: 430px;
     background: var(--surface);
-    border-top: 1px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: 16px 16px 0 0;
-    padding: 12px 20px calc(32px + env(safe-area-inset-bottom, 0px));
-    z-index: 50;
+    padding: 12px 20px 24px;
+    z-index: 100;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    max-height: 85vh;
+    max-height: calc(80vh - 65px);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .sheet-handle {
@@ -1647,11 +1687,71 @@
     flex-shrink: 0;
   }
 
-  .sheet-header {
+  .sheet-topbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: -4px;
+  }
+
+  .sheet-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-sheet-close {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+  }
+
+  .btn-sheet-close:active { color: var(--text); }
+
+  .btn-sheet-delete {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+  }
+
+  .btn-sheet-delete:active { color: var(--error); }
+
+  .sheet-hero {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .sheet-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .sheet-pill {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+  }
+
+  .sheet-pill-deposit {
+    color: var(--active);
+    border-color: var(--active);
   }
 
   .sheet-title {
@@ -1728,26 +1828,9 @@
     display: block;
   }
 
-  .sheet-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .sheet-meta p {
-    font-size: 13px;
-    color: var(--text-2);
-  }
-
   .sheet-notes {
     color: var(--text-3) !important;
     font-style: italic;
-  }
-
-  .sheet-actions {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 8px;
   }
 
   .lightbox-overlay {
