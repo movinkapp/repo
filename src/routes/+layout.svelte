@@ -43,9 +43,7 @@
   .bottom-nav {
     position: fixed;
     bottom: 0;
-    bottom: env(safe-area-inset-bottom, 0);
     left: 50%;
-    padding-bottom: env(safe-area-inset-bottom, 0);
     transform: translateX(-50%);
     width: 100%;
     max-width: 430px;
@@ -54,7 +52,7 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: 10px 0 24px;
+    padding: 10px 0 calc(16px + env(safe-area-inset-bottom, 0px));
     z-index: 100;
   }
 

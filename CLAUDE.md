@@ -1,3 +1,4 @@
+cat > CLAUDE.md << 'EOF'
 # CLAUDE.md — Movink
 
 ## O que é
@@ -77,11 +78,24 @@ Gerencia spots, sessões, custos, lucro líquido e notificações automáticas D
 ## Workflow de desenvolvimento
 1. Ver código real (bash cat/grep)
 2. Analisar aqui no chat
-3. Gerar prompt cirúrgico para o Copilot
+3. Gerar prompt cirúrgico para o Copilot no formato STRICT INSTRUCTIONS
 4. Copilot aplica — confirmar resultado
 5. Commit apenas após confirmação
 
+## Formato de prompt cirúrgico (STRICT INSTRUCTIONS)
+Todo prompt gerado para o Copilot segue este formato:
+STRICT INSTRUCTIONS:
+
+Find and replace ONLY the block below in <ficheiro>
+Do NOT modify anything else
+
+FIND:
+<código exacto>
+REPLACE WITH:
+<código novo>
+
 ## Estado atual
-App funcional em fase de audit e polimento pré-beta.
+App funcional. Audit de segurança completo aplicado (9 blocos, 38 fixes).
 Beta planejado com 8-12 tatuadores conhecidos, acesso controlado via Supabase.
-Audit de segurança completo aplicado (blocos 1-7 em progresso).
+Cloudinary configurado para upload de imagens em sessões (project_image + ref_images).
+EOF
