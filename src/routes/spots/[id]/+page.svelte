@@ -1044,9 +1044,6 @@
       {/if}
 
       <div class="sheet-actions">
-        <button class="btn-sheet-delete" onclick={() => { const id = activeSessionSheet.id; activeSessionSheet = null; deleteSession(id) }} aria-label="Delete session">
-          <Trash2 size={15} strokeWidth={1.5} />
-        </button>
         <button class="btn-primary" onclick={() => { startEditSession(activeSessionSheet); activeSessionSheet = null }}>Edit session</button>
       </div>
     </div>
