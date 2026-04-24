@@ -1600,7 +1600,7 @@
     gap: 4px;
   }
 
-  :global(.session-chevron) {
+   :global(.session-chevron) {
     color: var(--text-3);
     flex-shrink: 0;
     animation: chevron-hint 2.5s ease-in-out infinite;
@@ -1644,20 +1644,18 @@
 
   .sheet-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 65px;
+    inset: 0;
     background: rgba(0,0,0,0.5);
-    z-index: 99;
+    z-index: 149;
     border: none;
     cursor: pointer;
     width: 100%;
+    height: 100%;
   }
 
   .sheet {
     position: fixed;
-    bottom: 65px;
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
@@ -1665,12 +1663,12 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 16px 16px 0 0;
-    padding: 12px 20px 24px;
-    z-index: 100;
+    padding: 12px 20px calc(90px + env(safe-area-inset-bottom, 0px));
+    z-index: 150;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    max-height: calc(80vh - 65px);
+    max-height: 85vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
