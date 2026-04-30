@@ -811,21 +811,6 @@
           <input id="s-client" bind:value={client_name} type="text" placeholder="Client name" />
         </div>
 
-        <div class="field">
-          <p class="field-label">Project photo <span class="optional">(optional)</span></p>
-          {#if project_image}
-            <div class="img-preview">
-              <img src={project_image} alt="Project" />
-              <button type="button" class="btn-img-remove" onclick={() => project_image = null}>×</button>
-            </div>
-          {:else}
-            <label class="btn-upload {uploadingProjectImage ? 'btn-upload-loading' : ''}">
-              {uploadingProjectImage ? 'Uploading···' : '+ Add photo'}
-              <input type="file" accept="image/*" onchange={handleProjectImageUpload} disabled={uploadingProjectImage} />
-            </label>
-          {/if}
-        </div>
-
         {#if ref_images.length >= 0}
         <div class="field">
           <p class="field-label">References <span class="optional">(up to 3)</span></p>
@@ -845,6 +830,21 @@
           </div>
         </div>
         {/if}
+
+        <div class="field">
+          <p class="field-label">Project photo <span class="optional">(optional)</span></p>
+          {#if project_image}
+            <div class="img-preview">
+              <img src={project_image} alt="Project" />
+              <button type="button" class="btn-img-remove" onclick={() => project_image = null}>×</button>
+            </div>
+          {:else}
+            <label class="btn-upload {uploadingProjectImage ? 'btn-upload-loading' : ''}">
+              {uploadingProjectImage ? 'Uploading···' : '+ Add photo'}
+              <input type="file" accept="image/*" onchange={handleProjectImageUpload} disabled={uploadingProjectImage} />
+            </label>
+          {/if}
+        </div>
 
         {#if sessionError}
           <p class="form-error">{sessionError}</p>
@@ -918,21 +918,6 @@
               <input id="ec-client" bind:value={edit_client_name} type="text" placeholder="Client name" />
             </div>
 
-            <div class="field">
-              <p class="field-label">Project photo <span class="optional">(optional)</span></p>
-              {#if edit_project_image}
-                <div class="img-preview">
-                  <img src={edit_project_image} alt="Project" />
-                  <button type="button" class="btn-img-remove" onclick={() => edit_project_image = null}>×</button>
-                </div>
-              {:else}
-                <label class="btn-upload {uploadingEditProjectImage ? 'btn-upload-loading' : ''}">
-                  {uploadingEditProjectImage ? 'Uploading···' : '+ Add photo'}
-                  <input type="file" accept="image/*" onchange={handleEditProjectImageUpload} disabled={uploadingEditProjectImage} />
-                </label>
-              {/if}
-            </div>
-
             {#if edit_ref_images.length >= 0}
             <div class="field">
               <p class="field-label">References <span class="optional">(up to 3)</span></p>
@@ -952,6 +937,21 @@
               </div>
             </div>
             {/if}
+
+            <div class="field">
+              <p class="field-label">Project photo <span class="optional">(optional)</span></p>
+              {#if edit_project_image}
+                <div class="img-preview">
+                  <img src={edit_project_image} alt="Project" />
+                  <button type="button" class="btn-img-remove" onclick={() => edit_project_image = null}>×</button>
+                </div>
+              {:else}
+                <label class="btn-upload {uploadingEditProjectImage ? 'btn-upload-loading' : ''}">
+                  {uploadingEditProjectImage ? 'Uploading···' : '+ Add photo'}
+                  <input type="file" accept="image/*" onchange={handleEditProjectImageUpload} disabled={uploadingEditProjectImage} />
+                </label>
+              {/if}
+            </div>
 
             {#if editSessionError}
               <p class="form-error">{editSessionError}</p>

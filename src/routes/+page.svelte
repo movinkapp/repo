@@ -213,8 +213,14 @@
     <img src="/movink-logo-typo-white.svg" alt="Movink" style="height:24px;width:auto" />
   </a>
   <nav class="nav-links">
-    <a href="#features" class="nav-link">Features</a>
-    <a href="#install"  class="nav-link">Install</a>
+    <a href="#features" class="nav-link">
+      <span class="nav-link-label">Features</span>
+      <span class="nav-link-sub">What Movink does</span>
+    </a>
+    <a href="#install" class="nav-link">
+      <span class="nav-link-label">Install</span>
+      <span class="nav-link-sub">No App Store needed</span>
+    </a>
     <a href="/waitlist" class="nav-cta">Get started →</a>
   </nav>
 </header>
@@ -688,6 +694,25 @@
     transition: opacity 0.2s;
   }
   .nav-cta:hover { opacity: 0.6; }
+
+  .nav-link {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .nav-link-label {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+  .nav-link-sub {
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--text-3);
+    font-weight: 400;
+  }
 
   /* ── HERO ─────────────────────────────────────────────────────────── */
   .hero {
