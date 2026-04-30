@@ -199,7 +199,6 @@
             <BarChart2 size={16} strokeWidth={1.5} />
             <p class="cta-label">Analytics</p>
           </div>
-          <p class="cta-title">How's your year going?</p>
           <p class="cta-hint">Earnings, costs and net profit by year →</p>
         </a>
         <a href="/community" class="card-cta">
@@ -210,7 +209,6 @@
               <span class="nearby-badge">{nearbyCount} nearby</span>
             {/if}
           </div>
-          <p class="cta-title">Who's in your city?</p>
           <p class="cta-hint">See other artists doing guest spots near you →</p>
         </a>
       </div>
@@ -447,15 +445,6 @@
     letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--text-3);
-  }
-
-  .cta-title {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    color: var(--text);
-    margin-bottom: 6px;
   }
 
   .cta-hint { font-size: 13px; color: var(--text-3); }

@@ -306,7 +306,7 @@
       <h2 class="feat-title">
         Plan your<br/><em>spot.</em>
       </h2>
-      <p class="feat-desc">Studio, city, dates, deal — all in one place before you pack the bags. Log each session as it happens. Your calendar, your rules.</p>
+      <p class="feat-desc">Studio, city, dates, deal — all in one place before you pack the bags. Log each session as it happens, attach project and reference images. Your calendar, your rules.</p>
     </div>
     <div class="feat-card">
       <div class="card-inner">
@@ -437,20 +437,29 @@
       <div class="card-inner">
         <p class="ci-dates" style="margin-bottom: 14px;">Artists in Tokyo right now</p>
         <div class="ci-sessions">
-          <div class="ci-sess">
-            <span>@inkbymarta</span>
-            <span class="cv">Studio Hori</span>
+          <div class="ci-sess" style="gap:10px;align-items:center;">
+            <div class="mock-avatar">M</div>
+            <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+              <span style="font-size:12px;font-weight:700;color:var(--text)">@inkbymarta</span>
+              <span style="font-size:11px;color:var(--text-3)">Studio Hori · 3–9 Apr</span>
+            </div>
           </div>
-          <div class="ci-sess">
-            <span>@blackwork.joe</span>
-            <span class="cv">Tattoo Lab</span>
+          <div class="ci-sess" style="gap:10px;align-items:center;">
+            <div class="mock-avatar">B</div>
+            <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+              <span style="font-size:12px;font-weight:700;color:var(--text)">@blackwork.joe</span>
+              <span style="font-size:11px;color:var(--text-3)">Tattoo Lab · 1–7 Apr</span>
+            </div>
           </div>
-          <div class="ci-sess">
-            <span>@sena.ink</span>
-            <span class="cv">Studio Zero</span>
+          <div class="ci-sess" style="gap:10px;align-items:center;">
+            <div class="mock-avatar">S</div>
+            <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+              <span style="font-size:12px;font-weight:700;color:var(--text)">@sena.ink</span>
+              <span style="font-size:11px;color:var(--text-3)">Studio Zero · 5–12 Apr</span>
+            </div>
           </div>
         </div>
-        <div class="ci-net" style="margin-top: 14px;">
+        <div class="ci-net" style="margin-top:14px;">
           <span class="ci-net-label">Visible to community</span>
           <span class="ci-badge">● Active</span>
         </div>
@@ -1248,6 +1257,22 @@
   }
   .chk.done span:last-child {
     text-decoration: line-through;
+  }
+
+  .mock-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    flex-shrink: 0;
   }
 
   /* ── INSTALL ───────────────────────────────────────────────────────── */

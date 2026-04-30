@@ -7,20 +7,48 @@
   let password = ''
   let loading = false
   let ready = false
+  let error = ''
 
-  onMount(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+  onMount(async () => {
+    // Extrai tokens do hash da URL (formato Supabase)
+    const hash = window.location.hash.substring(1)
+    const params = new URLSearchParams(hash)
+    const accessToken = params.get('access_token')
+    const refreshToken = params.get('refresh_token')
+    const type = params.get('type')
+
+    if (accessToken && type === 'recovery') {
+      // Sincroniza a sessão via cookie usando a rota já existente
+      try {
+        await fetch('/api/auth/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: accessToken, refresh_token: refreshToken })
+        })
+        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
         ready = true
-        subscription.unsubscribe()
+        // Limpa o hash da URL sem recarregar
+        history.replaceState(null, '', window.location.pathname)
+      } catch (e) {
+        error = 'Invalid or expired reset link.'
       }
-    })
+    } else {
+      // Sem tokens no hash — verifica se já há sessão ativa de recovery
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          ready = true
+          subscription.unsubscribe()
+        }
+      })
 
-    setTimeout(() => {
-      if (!ready) goto('/login')
-    }, 5000)
+      setTimeout(() => {
+        if (!ready) {
+          error = 'Invalid or expired reset link.'
+        }
+      }, 8000)
 
-    return () => subscription.unsubscribe()
+      return () => subscription.unsubscribe()
+    }
   })
 
   async function handleReset() {
@@ -29,10 +57,10 @@
       return
     }
     loading = true
-    const { error } = await supabase.auth.updateUser({ password })
+    const { error: err } = await supabase.auth.updateUser({ password })
     loading = false
-    if (error) {
-      toast(error.message, 'error')
+    if (err) {
+      toast(err.message, 'error')
     } else {
       toast('Password updated — you are now signed in.')
       goto('/home')
@@ -65,6 +93,11 @@
         {loading ? '···' : 'Update password'}
       </button>
     </div>
+  {:else if error}
+    <div class="form">
+      <p class="waiting">{error}</p>
+      <a href="/login" class="btn-primary" style="text-align:center;text-decoration:none;">Back to login</a>
+    </div>
   {:else}
     <p class="waiting">Verifying link···</p>
   {/if}
@@ -87,9 +120,6 @@
     line-height: 1;
     margin-bottom: 10px;
   }
-
-  .mov { font-weight: 800; }
-  .ink { font-weight: 200; }
 
   .tagline {
     font-size: 14px;

@@ -137,7 +137,6 @@
           <Calculator size={16} strokeWidth={1.5} />
           <p class="cta-label">Calculator</p>
         </div>
-        <p class="cta-title">Is your next guest spot worth it?</p>
         <p class="cta-hint">Simulate the deal before you say yes →</p>
       </a>
     </div>
@@ -314,14 +313,6 @@
     color: var(--text-3);
   }
 
-  .cta-title {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    color: var(--text);
-    margin-bottom: 6px;
-  }
 
   .cta-hint {
     font-size: 13px;
