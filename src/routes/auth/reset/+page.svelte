@@ -52,8 +52,8 @@
   })
 
   async function handleReset() {
-    if (!password || password.length < 6) {
-      toast('Password must be at least 6 characters.', 'error')
+    if (!password || password.length < 8) {
+      toast('Password must be at least 8 characters.', 'error')
       return
     }
     loading = true
@@ -85,7 +85,7 @@
           bind:value={password}
           type="password"
           placeholder="········"
-          minlength="6"
+          minlength="8"
         />
       </div>
 
