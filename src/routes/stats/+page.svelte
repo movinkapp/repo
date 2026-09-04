@@ -108,9 +108,9 @@
     if (!user) { goto('/login'); return }
 
     const [spotsRes, sessionsRes, costsRes, profileRes] = await Promise.all([
-      supabase.from('spots').select('*'),
-      supabase.from('sessions').select('*'),
-      supabase.from('costs').select('*'),
+      supabase.from('spots').select('id, start_date, end_date, country, deal_type, deal_value, exchange_rate'),
+      supabase.from('sessions').select('spot_id, value, date'),
+      supabase.from('costs').select('spot_id, amount, date'),
       supabase.from('users').select('base_currency').eq('id', user.id).single()
     ])
 

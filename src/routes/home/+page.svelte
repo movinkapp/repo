@@ -32,7 +32,7 @@
     try {
       const { data: spotsData } = await supabase
         .from('spots')
-        .select('*')
+        .select('id, studio_name, start_date, end_date')
         .order('start_date', { ascending: true })
 
       const { data: sessionsData } = await supabase

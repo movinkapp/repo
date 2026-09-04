@@ -18,7 +18,7 @@
   onMount(async () => {
     const { data, error } = await supabase
       .from('spots')
-      .select('*')
+      .select('id, studio_name, city, country, start_date, end_date, deal_type, deal_value, currency')
       .order('start_date', { ascending: true })
 
     if (!error) spots = data
