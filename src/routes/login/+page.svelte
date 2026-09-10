@@ -13,8 +13,6 @@
   let mode = 'login'
   let showPassword = false
 
-  let resetSent = false
-
   async function handleSubmit() {
     loading = true
     error = ''
@@ -49,22 +47,6 @@
     loading = false
   }
 
-  async function handleReset() {
-    if (!email) {
-      toast('Enter your email first.', 'error')
-      return
-    }
-    loading = true
-    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset`
-    })
-    loading = false
-    if (err) {
-      toast(err.message, 'error')
-    } else {
-      resetSent = true
-    }
-  }
 </script>
 
 <div class="container">
@@ -143,18 +125,17 @@
         {loading ? '···' : mode === 'login' ? "Let's go" : 'Join Movink'}
       </button>
 
-      {#if resetSent}
-        <p class="reset-msg">Check your inbox — we sent a password reset link.</p>
-      {:else}
-        {#if mode === 'login'}
-          <button class="btn-ghost-sm" onclick={handleReset} disabled={loading}>
-            Forgot password?
-          </button>
-        {/if}
-        <button class="btn-ghost" onclick={() => { mode = mode === 'login' ? 'register' : 'login'; error = '' }}>
-          {mode === 'login' ? 'First time? Join Movink' : 'Already have an account? Sign in'}
+      {#if mode === 'login'}
+        <button class="btn-ghost-sm" onclick={() => {
+          try { sessionStorage.setItem('forgot_email', email) } catch (e) {}
+          goto('/auth/forgot')
+        }}>
+          Forgot password?
         </button>
       {/if}
+      <button class="btn-ghost" onclick={() => { mode = mode === 'login' ? 'register' : 'login'; error = '' }}>
+        {mode === 'login' ? 'First time? Join Movink' : 'Already have an account? Sign in'}
+      </button>
     </div>
   {/if}
 </div>

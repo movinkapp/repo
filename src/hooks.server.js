@@ -22,7 +22,7 @@ Sentry.init({
   }
 })
 
-const PUBLIC_PATHS = ['/', '/login', '/auth/confirmed', '/auth/reset', '/onboarding', '/waitlist']
+const PUBLIC_PATHS = ['/', '/login', '/auth/confirmed', '/auth/reset', '/auth/forgot', '/onboarding', '/waitlist']
 
 const originalHandle = async ({ event, resolve }) => {
   const path = event.url.pathname
