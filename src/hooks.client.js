@@ -1,9 +1,21 @@
 import * as Sentry from '@sentry/sveltekit'
+import { PUBLIC_SENTRY_DSN } from '$env/static/public'
 
 Sentry.init({
-  dsn: 'https://6642ca695289af10fc355fef6738e10f@o4510983925792768.ingest.de.sentry.io/4510983930970192',
+  dsn: PUBLIC_SENTRY_DSN,
   tracesSampleRate: 0.5,
-  environment: import.meta.env.MODE
+  environment: import.meta.env.MODE,
+  sendDefaultPii: false,
+  beforeSend(event) {
+    const headers = event.request?.headers
+    if (headers) {
+      delete headers.Authorization
+      delete headers.authorization
+      delete headers.Cookie
+      delete headers.cookie
+    }
+    return event
+  }
 })
 
 export const handleError = Sentry.handleErrorWithSentry()

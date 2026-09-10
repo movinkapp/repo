@@ -8,7 +8,18 @@ import { SENTRY_DSN } from '$env/static/private'
 Sentry.init({
   dsn: SENTRY_DSN,
   tracesSampleRate: 0.5,
-  environment: import.meta.env.MODE
+  environment: import.meta.env.MODE,
+  sendDefaultPii: false,
+  beforeSend(event) {
+    const headers = event.request?.headers
+    if (headers) {
+      delete headers.Authorization
+      delete headers.authorization
+      delete headers.Cookie
+      delete headers.cookie
+    }
+    return event
+  }
 })
 
 const PUBLIC_PATHS = ['/', '/login', '/auth/confirmed', '/auth/reset', '/onboarding', '/waitlist']
