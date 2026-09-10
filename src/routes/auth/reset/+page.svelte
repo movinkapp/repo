@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import { supabase } from '$lib/supabase.js'
+  import { resolveAuthCallback } from '$lib/auth-callback.js'
   import { goto } from '$app/navigation'
   import { toast } from '$lib/toast.js'
 
@@ -10,44 +11,12 @@
   let error = ''
 
   onMount(async () => {
-    // Extrai tokens do hash da URL (formato Supabase)
-    const hash = window.location.hash.substring(1)
-    const params = new URLSearchParams(hash)
-    const accessToken = params.get('access_token')
-    const refreshToken = params.get('refresh_token')
-    const type = params.get('type')
-
-    if (accessToken && type === 'recovery') {
-      // Sincroniza a sessão via cookie usando a rota já existente
-      try {
-        await fetch('/api/auth/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ access_token: accessToken, refresh_token: refreshToken })
-        })
-        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-        ready = true
-        // Limpa o hash da URL sem recarregar
-        history.replaceState(null, '', window.location.pathname)
-      } catch (e) {
-        error = 'Invalid or expired reset link.'
-      }
+    const { session, error: callbackError } = await resolveAuthCallback('recovery')
+    history.replaceState(null, '', window.location.pathname)
+    if (session) {
+      ready = true
     } else {
-      // Sem tokens no hash — verifica se já há sessão ativa de recovery
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-        if (event === 'PASSWORD_RECOVERY') {
-          ready = true
-          subscription.unsubscribe()
-        }
-      })
-
-      setTimeout(() => {
-        if (!ready) {
-          error = 'Invalid or expired reset link.'
-        }
-      }, 8000)
-
-      return () => subscription.unsubscribe()
+      error = callbackError?.message || 'Invalid or expired reset link.'
     }
   })
 

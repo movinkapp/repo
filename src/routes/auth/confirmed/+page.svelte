@@ -1,38 +1,24 @@
 <script>
   import { onMount } from 'svelte'
-  import { supabase } from '$lib/supabase.js'
+  import { resolveAuthCallback } from '$lib/auth-callback.js'
   import { goto } from '$app/navigation'
   import { page } from '$app/stores'
 
   let status = 'Confirming your email...'
 
-  onMount(() => {
+  onMount(async () => {
     const rawNext = $page.url.searchParams.get('next') || '/onboarding'
     const next = rawNext.startsWith('/') ? rawNext : '/onboarding'
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        status = 'Email confirmed — redirecting...'
-        subscription.unsubscribe()
-        clearTimeout(failureTimeout)
-        setTimeout(() => goto(next), 600)
-      }
-    })
+    const { session, error: callbackError } = await resolveAuthCallback('signup')
+    history.replaceState({}, '', window.location.pathname)
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        status = 'Email confirmed — redirecting...'
-        subscription.unsubscribe()
-        clearTimeout(failureTimeout)
-        setTimeout(() => goto(next), 600)
-      }
-    })
-
-    const failureTimeout = setTimeout(() => {
-      status = 'Something went wrong. Try logging in.'
-    }, 8000)
-
-    return () => subscription.unsubscribe()
+    if (session) {
+      status = 'Email confirmed — redirecting...'
+      setTimeout(() => goto(next), 600)
+    } else {
+      status = callbackError?.message || 'Something went wrong. Try logging in.'
+    }
   })
 </script>
 
