@@ -20,6 +20,7 @@
     if (mode === 'login') {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password })
       if (err) {
+        console.error('login error:', err)
         error = err.message
         toast(err.message, 'error')
       } else {
@@ -35,6 +36,7 @@
         }
       })
       if (err) {
+        console.error('signup error:', err)
         error = err.message
         toast(err.message, 'error')
       } else if (data?.session) {

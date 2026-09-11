@@ -17,7 +17,8 @@
       status = 'Email confirmed — redirecting...'
       setTimeout(() => goto(next), 600)
     } else {
-      status = callbackError?.message || 'Something went wrong. Try logging in.'
+      console.error('auth callback error:', callbackError)
+      status = 'Something went wrong. Try logging in.'
     }
   })
 </script>

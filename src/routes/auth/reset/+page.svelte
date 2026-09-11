@@ -16,7 +16,8 @@
     if (session) {
       ready = true
     } else {
-      error = callbackError?.message || 'Invalid or expired reset link.'
+      console.error('auth callback error:', callbackError)
+      error = 'Invalid or expired reset link.'
     }
   })
 
@@ -29,6 +30,7 @@
     const { error: err } = await supabase.auth.updateUser({ password })
     loading = false
     if (err) {
+      console.error(err)
       toast(err.message, 'error')
     } else {
       toast('Password updated — you are now signed in.')

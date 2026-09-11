@@ -63,7 +63,8 @@ export async function requestNotificationPermission() {
 
     return { ok: true }
   } catch (e) {
-    return { ok: false, reason: 'error', detail: e.message }
+    console.error('push subscription error:', e)
+    return { ok: false, reason: 'error' }
   }
 }
 

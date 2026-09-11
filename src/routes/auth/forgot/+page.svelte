@@ -30,7 +30,8 @@
     })
     loading = false
     if (err) {
-      toast(err.message, 'error')
+      console.error('reset password request error:', err)
+      toast('Could not send reset link. Please try again.', 'error')
     } else {
       sent = true
     }

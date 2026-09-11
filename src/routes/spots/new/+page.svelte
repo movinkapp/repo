@@ -77,8 +77,9 @@
     }).select().single()
 
     if (err) {
-      error = err.message
-      toast(err.message, 'error')
+      console.error('create spot error:', err)
+      error = 'Could not save. Please try again.'
+      toast('Could not save. Please try again.', 'error')
     } else {
       toast('Spot created')
       goto(`/spots/${newSpot.id}`)
