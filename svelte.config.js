@@ -28,7 +28,10 @@ const config = {
 				'object-src': ['none'],
 				'base-uri': ['self'],
 				'form-action': ['self'],
-				'frame-ancestors': ['none']
+				'frame-ancestors': ['none'],
+				'report-uri': [
+					'https://o4510983925792768.ingest.de.sentry.io/api/4510983930970192/security/?sentry_key=6642ca695289af10fc355fef6738e10f'
+				]
 			}
 		}
 	}
