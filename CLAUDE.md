@@ -1,4 +1,3 @@
-cat > CLAUDE.md << 'EOF'
 # CLAUDE.md — Movink
 
 ## O que é
@@ -31,7 +30,7 @@ Gerencia spots, sessões, custos, lucro líquido e notificações automáticas D
 - Não há pasta supabase/migrations no repo. Todo o schema é gerido direto no painel Supabase (sem versionamento em código).
 
 ## Rotas existentes
-/, /login, /home, /spots, /spots/[id], /spots/new, /calculator, /profile, /onboarding, /waitlist, /auth/confirmed, /auth/reset, /stats, /community
+/, /login, /home, /spots, /spots/[id], /spots/new, /calculator, /profile, /onboarding, /waitlist, /auth/confirmed, /auth/reset, /auth/forgot, /stats, /community
 (todas confirmadas em src/routes — nenhuma rota planejada em falta)
 
 ### Nav inferior (4 abas)
@@ -39,7 +38,6 @@ Gerencia spots, sessões, custos, lucro líquido e notificações automáticas D
 
 ## APIs internas
 - POST /api/auth/sync — sincroniza tokens via cookie
-- GET  /api/session  — verifica sessão server-side
 - GET  /api/photon   — proxy Komoot Photon com lang=en
 
 ## Variáveis de ambiente
@@ -49,6 +47,7 @@ Gerencia spots, sessões, custos, lucro líquido e notificações automáticas D
 - PUBLIC_CLOUDINARY_CLOUD_NAME
 - PUBLIC_CLOUDINARY_UPLOAD_PRESET
 - VITE_VAPID_PUBLIC_KEY
+- PUBLIC_SENTRY_DSN
 
 ### Servidor (privadas)
 - SENTRY_DSN
@@ -77,6 +76,8 @@ Gerencia spots, sessões, custos, lucro líquido e notificações automáticas D
 - send-notifications protegida com Authorization: Bearer FUNCTION_SECRET
 - auth/confirmed valida next param antes de goto (só paths relativos)
 - sw.js valida URL antes de openWindow (só paths relativos)
+- Headers de segurança (HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) via hooks.server.js; CSP em modo reportOnly no svelte.config.js até validação manual no browser
+- Sentry com sendDefaultPii false e beforeSend removendo Authorization e Cookie
 
 ## Regras absolutas
 1. NUNCA inventar tabelas, colunas, rotas ou funções não listadas acima
@@ -87,6 +88,7 @@ Gerencia spots, sessões, custos, lucro líquido e notificações automáticas D
 6. SEMPRE responder em português brasileiro
 7. SEMPRE ver o código real antes de gerar qualquer fix
 8. Uma mudança cirúrgica por prompt ao Copilot
+9. NUNCA incluir a linha "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" (nem qualquer Co-Authored-By de IA) em mensagens de commit
 
 ## Workflow de desenvolvimento
 1. Ver código real (bash cat/grep)
@@ -108,7 +110,7 @@ REPLACE WITH:
 <código novo>
 
 ## Estado atual
-App funcional e completo no fluxo principal. Working tree limpo, tudo commitado.
+App funcional e completo no fluxo principal. Fase pré-beta: fechando pendências de GDPR e segurança (ver docs/security-audit e o checklist de tracking).
 
 ### Concluído ✅
 - [x] Auth completo: login, signup, confirmação de email, reset de password
@@ -129,8 +131,6 @@ App funcional e completo no fluxo principal. Working tree limpo, tudo commitado.
 ### Pendente ⬜
 - [ ] Beta com 8-12 tatuadores conhecidos — planejado, ainda não iniciado
 - [ ] RESEND_API_KEY existe no .env mas não é usada em lado nenhum do código (email transacional não implementado)
-- [ ] Nenhum cron/scheduler no repo a chamar send-notifications — o agendamento tem de estar configurado fora do código (Supabase cron ou externo); confirmar
+- [ ] Cron de send-notifications existe no Supabase (pg_cron), fora do repo: 2 jobs duplicados (send-notifications-daily às 11h UTC, com header Authorization; daily-notifications às 9h UTC, sem Authorization), ambos respondem 200. Decidir qual manter.
 - [ ] README.md ainda é o template default do SvelteKit
 - [ ] Sem migrations versionadas e sem testes automatizados
-- [ ] select('*') ainda usado em /home, /spots e /stats (viola a regra 4)
-EOF
