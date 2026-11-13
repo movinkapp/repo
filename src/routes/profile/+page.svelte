@@ -2,7 +2,7 @@
   import { supabase } from '$lib/supabase.js'
   import { goto } from '$app/navigation'
   import { onMount } from 'svelte'
-  import { LogOut, BarChart2, ChevronRight, Users } from 'lucide-svelte'
+  import { LogOut, BarChart2, ChevronRight, Users, Trash2 } from 'lucide-svelte'
   import { toasts, toast } from '$lib/toast.js'
   import { currencySymbols, fadeSlide } from '$lib/utils.js'
   import { requestNotificationPermission, isNotificationsEnabled, disableNotifications } from '$lib/notifications.js'
@@ -19,6 +19,10 @@
   let notifPermission = 'default'
   let modalOpen = false
   let nearbyCount = 0
+  let deleteModalOpen = false
+  let deleteConfirmText = ''
+  let deleting = false
+  const DELETE_ACCOUNT_FUNCTION = 'delete-account'
 
   async function loadNearbyCount(userId) {
     const today = new Date().toISOString().split('T')[0]
@@ -174,6 +178,36 @@
     toast('Signed out')
     goto('/login')
   }
+
+  function openDeleteModal() {
+    deleteConfirmText = ''
+    deleteModalOpen = true
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirmText !== 'DELETE' || deleting) return
+    deleting = true
+    try {
+      try {
+        await disableNotifications()
+      } catch (e) {
+        console.error('disable push before delete failed:', e)
+      }
+      const { data, error: fnError } = await supabase.functions.invoke(DELETE_ACCOUNT_FUNCTION, {
+        body: { confirm: 'DELETE' }
+      })
+      if (fnError || data?.ok !== true) {
+        console.error('delete account error:', fnError, data)
+        toast('Could not delete account. Please try again.', 'error')
+        return
+      }
+      await supabase.auth.signOut({ scope: 'local' })
+      toast('Account deleted')
+      goto('/')
+    } finally {
+      deleting = false
+    }
+  }
 </script>
 
 <div class="page">
@@ -290,6 +324,10 @@
           <LogOut size={16} strokeWidth={1.5} />
           <span>Sign out</span>
         </button>
+        <button class="menu-item logout" onclick={openDeleteModal}>
+          <Trash2 size={16} strokeWidth={1.5} />
+          <span>Delete account</span>
+        </button>
       </div>
     </div>
 
@@ -316,6 +354,35 @@
       {/each}
     </div>
     <button class="btn-primary" onclick={saveCurrency}>Save</button>
+  </div>
+{/if}
+
+<!-- Delete account modal -->
+{#if deleteModalOpen}
+  <button class="overlay" onclick={() => { if (!deleting) deleteModalOpen = false }} aria-label="Close modal" transition:fadeSlide={{ duration: 200, y: 0 }}></button>
+
+  <div class="sheet" transition:fadeSlide={{ duration: 300, y: 40 }}>
+    <div class="sheet-handle"></div>
+    <p class="sheet-title">Delete your account?</p>
+    <p class="sheet-hint">This permanently deletes your account, spots, sessions, costs, simulations and uploaded images. This cannot be undone.</p>
+    <label class="delete-label" for="delete-confirm">Type DELETE to confirm</label>
+    <input
+      id="delete-confirm"
+      class="delete-input"
+      type="text"
+      placeholder="DELETE"
+      autocapitalize="off"
+      autocomplete="off"
+      spellcheck="false"
+      bind:value={deleteConfirmText}
+      disabled={deleting}
+    />
+    <div class="delete-actions">
+      <button class="btn-cancel" onclick={() => deleteModalOpen = false} disabled={deleting}>Cancel</button>
+      <button class="btn-danger" onclick={handleDeleteAccount} disabled={deleteConfirmText !== 'DELETE' || deleting}>
+        {deleting ? '···' : 'Delete account'}
+      </button>
+    </div>
   </div>
 {/if}
 
@@ -615,4 +682,60 @@
     padding: 3px 8px;
     border-radius: 20px;
   }
+
+  .delete-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+    margin-bottom: 8px;
+  }
+
+  .delete-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    margin-bottom: 20px;
+  }
+
+  .delete-input:focus { border-color: var(--text-3); }
+  .delete-input::placeholder { color: var(--text-3); }
+
+  .delete-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-cancel,
+  .btn-danger {
+    flex: 1;
+    border-radius: var(--radius);
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 15px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .btn-cancel {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .btn-danger {
+    background: var(--error);
+    border: none;
+    color: var(--text);
+  }
+
+  .btn-cancel:disabled,
+  .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
