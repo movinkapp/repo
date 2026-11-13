@@ -59,6 +59,9 @@ Gerencia spots, sessões, custos, lucro líquido e notificações automáticas D
 - VAPID_PUBLIC_KEY
 - VAPID_PRIVATE_KEY
 - VAPID_MAILTO
+- CLOUDINARY_CLOUD_NAME (só a function delete-account)
+- CLOUDINARY_API_KEY (só a function delete-account)
+- CLOUDINARY_API_SECRET (só a function delete-account)
 
 ## Padrões de código
 - Svelte 5 runes — usar $state, $derived, $effect
@@ -89,6 +92,7 @@ Gerencia spots, sessões, custos, lucro líquido e notificações automáticas D
 7. SEMPRE ver o código real antes de gerar qualquer fix
 8. Uma mudança cirúrgica por prompt ao Copilot
 9. NUNCA incluir a linha "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" (nem qualquer Co-Authored-By de IA) em mensagens de commit
+10. ANTES de qualquer push que mexa em configuração global (svelte.config.js, src/hooks.server.js, src/hooks.client.js, src/app.html, src/routes/+layout.svelte), rodar npm run dev e abrir /, /login e uma rota privada com e sem sessão. O build não pega erros de renderização.
 
 ## Workflow de desenvolvimento
 1. Ver código real (bash cat/grep)
