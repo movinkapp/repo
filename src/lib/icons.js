@@ -1,0 +1,23 @@
+// Dev-only stand-in for `import { X } from 'lucide-svelte'` (aliased in vite.config.js).
+// The lucide-svelte barrel makes Vite SSR compile all ~1700 icons, which hangs `npm run dev`.
+// When you use a new icon anywhere in src/, add it here too, or dev will fail with a missing export.
+export { default as BarChart2 } from 'lucide-svelte/icons/bar-chart-2'
+export { default as Calculator } from 'lucide-svelte/icons/calculator'
+export { default as Calendar } from 'lucide-svelte/icons/calendar'
+export { default as Check } from 'lucide-svelte/icons/check'
+export { default as ChevronLeft } from 'lucide-svelte/icons/chevron-left'
+export { default as ChevronRight } from 'lucide-svelte/icons/chevron-right'
+export { default as ClipboardList } from 'lucide-svelte/icons/clipboard-list'
+export { default as Eye } from 'lucide-svelte/icons/eye'
+export { default as EyeOff } from 'lucide-svelte/icons/eye-off'
+export { default as Home } from 'lucide-svelte/icons/home'
+export { default as Instagram } from 'lucide-svelte/icons/instagram'
+export { default as LogOut } from 'lucide-svelte/icons/log-out'
+export { default as MapPin } from 'lucide-svelte/icons/map-pin'
+export { default as Pencil } from 'lucide-svelte/icons/pencil'
+export { default as Plus } from 'lucide-svelte/icons/plus'
+export { default as Settings2 } from 'lucide-svelte/icons/settings-2'
+export { default as Trash2 } from 'lucide-svelte/icons/trash-2'
+export { default as User } from 'lucide-svelte/icons/user'
+export { default as Users } from 'lucide-svelte/icons/users'
+export { default as X } from 'lucide-svelte/icons/x'
